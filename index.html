@@ -65,7 +65,6 @@
 
         .feature-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
         .feature { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.2s; }
-        .feature:hover { transform: scale(1.02); background: rgba(255,255,255,0.08); }
         
         .feature-icon { width: 40px; height: 40px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.15); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .feature-icon svg { width: 20px; height: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
@@ -87,18 +86,10 @@
         
         #app-container { display: none; position: relative; width: 100%; height: 100%; }
         
-        /* 🔥 BUG FIX: Video element cannot be display:none for Mobile Browsers 🔥 */
-        video { 
-            position: absolute; 
-            opacity: 0; 
-            width: 1px; 
-            height: 1px; 
-            pointer-events: none; 
-            z-index: -10; 
-        }
-        
+        video { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; z-index: -10; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #bg-canvas { z-index: 1; filter: brightness(0.55) contrast(1.1); }
+        
+        #bg-canvas { z-index: 1; }
         #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
     </style>
 </head>
@@ -110,53 +101,28 @@
         
         <div class="glass-card">
             <h1>Specially Made For Anvi ✨</h1>
-            <div class="subtitle">Let your hands create the universe Anvi</div>
+            <div class="subtitle">Let your hands create the universe</div>
             
             <div class="feature-list">
                 <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path fill="#ff4b82" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    </div>
-                    <div class="feature-text">
-                        <h3>1 Finger (Beautiful Hearts)</h3>
-                        <p>Move your finger to unleash massive, vibrant beating hearts.</p>
-                    </div>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path fill="#ff4b82" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+                    <div class="feature-text"><h3>1 Finger (Beautiful Hearts)</h3><p>Show one finger for magic beating hearts.</p></div>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path fill="#00f3ff" d="M14.59 2.18l-2.02 5.66-2.02-5.66A2 2 0 0 0 8.66 1L2.5 3.19a2 2 0 0 0-1.29 2.45l2.03 5.71a10.82 10.82 0 0 0 6.64 6.72l2.12.75 2.12-.75a10.82 10.82 0 0 0 6.64-6.72l2.03-5.71a2 2 0 0 0-1.29-2.45L15.34 1a2 2 0 0 0-1.89 1.18z"/></svg>
-                    </div>
-                    <div class="feature-text">
-                        <h3>2 Fingers (Magic Butterflies)</h3>
-                        <p>Show 2 fingers to release a flock of colorful flapping butterflies.</p>
-                    </div>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path fill="#00f3ff" d="M14.59 2.18l-2.02 5.66-2.02-5.66A2 2 0 0 0 8.66 1L2.5 3.19a2 2 0 0 0-1.29 2.45l2.03 5.71a10.82 10.82 0 0 0 6.64 6.72l2.12.75 2.12-.75a10.82 10.82 0 0 0 6.64-6.72l2.03-5.71a2 2 0 0 0-1.29-2.45L15.34 1a2 2 0 0 0-1.89 1.18z"/></svg></div>
+                    <div class="feature-text"><h3>2 Fingers (Magic Butterflies)</h3><p>Flock of flapping colorful butterflies.</p></div>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path fill="#ffb800" d="M12 2.5a4.5 4.5 0 0 0-4.5 4.5c0 1.63.88 3.07 2.19 3.88-.36.42-.78.78-1.25 1.07A4.47 4.47 0 0 0 5 10a4.5 4.5 0 0 0-4.5 4.5c0 1.83 1.1 3.42 2.68 4.12a5.52 5.52 0 0 0 1.04 3.73A4.5 4.5 0 0 0 8.5 24c1.63 0 3.07-.88 3.88-2.19.42.36.78.78 1.07 1.25A4.47 4.47 0 0 0 16 25a4.5 4.5 0 0 0 4.5-4.5c0-1.83-1.1-3.42-2.68-4.12a5.52 5.52 0 0 0-1.04-3.73A4.5 4.5 0 0 0 12 2.5z"/></svg>
-                    </div>
-                    <div class="feature-text">
-                        <h3>3 Fingers (Glowing Flowers)</h3>
-                        <p>Emit magical spinning rainbow flowers from your fingertips.</p>
-                    </div>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path fill="#ffb800" d="M12 2.5a4.5 4.5 0 0 0-4.5 4.5c0 1.63.88 3.07 2.19 3.88-.36.42-.78.78-1.25 1.07A4.47 4.47 0 0 0 5 10a4.5 4.5 0 0 0-4.5 4.5c0 1.83 1.1 3.42 2.68 4.12a5.52 5.52 0 0 0 1.04 3.73A4.5 4.5 0 0 0 8.5 24c1.63 0 3.07-.88 3.88-2.19.42.36.78.78 1.07 1.25A4.47 4.47 0 0 0 16 25a4.5 4.5 0 0 0 4.5-4.5c0-1.83-1.1-3.42-2.68-4.12a5.52 5.52 0 0 0-1.04-3.73A4.5 4.5 0 0 0 12 2.5z"/></svg></div>
+                    <div class="feature-text"><h3>3 Fingers (Glowing Flowers)</h3><p>Magical spinning rainbow flowers.</p></div>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg>
-                    </div>
-                    <div class="feature-text">
-                        <h3>4 Fingers (Multi-Colored)</h3>
-                        <p>Show 4 fingers to emit heavy, multi-colored magic glitter arrays.</p>
-                    </div>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg></div>
+                    <div class="feature-text"><h3>4 Fingers (Multi-Colored)</h3><p>Multi-colored magic glitter arrays.</p></div>
                 </div>
                 <div class="feature">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path fill="#ffea00" d="M21 9C21 7.9 20.1 7 19 7H18V5C18 3.9 17.1 3 16 3C14.9 3 14 3.9 14 5V6H13V3C13 1.9 12.1 1 11 1C9.9 1 9 1.9 9 3V7H8V5C8 3.9 7.1 3 6 3C4.9 3 4 3.9 4 5V14C4 17.3 6.7 20 10 20H16C19.3 20 22 17.3 22 14V10C22 9.4 21.6 9 21 9Z"/></svg>
-                    </div>
-                    <div class="feature-text">
-                        <h3>5 Fingers (Secret Spell)</h3>
-                        <p>A magical surprise awaits.</p>
-                    </div>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24"><path fill="#ffea00" d="M21 9C21 7.9 20.1 7 19 7H18V5C18 3.9 17.1 3 16 3C14.9 3 14 3.9 14 5V6H13V3C13 1.9 12.1 1 11 1C9.9 1 9 1.9 9 3V7H8V5C8 3.9 7.1 3 6 3C4.9 3 4 3.9 4 5V14C4 17.3 6.7 20 10 20H16C19.3 20 22 17.3 22 14V10C22 9.4 21.6 9 21 9Z"/></svg></div>
+                    <div class="feature-text"><h3>5 Fingers (Secret Spell)</h3><p>A magical surprise awaits right in your palm.</p></div>
                 </div>
             </div>
 
@@ -166,8 +132,8 @@
     </div>
 
     <div id="app-container">
-        <!-- 🔥 BUG FIX: Added extra attributes for iOS/Mobile support 🔥 -->
-        <video id="video" autoplay playsinline muted webkit-playsinline></video>
+        <!-- 🚨 FIX: Strict Attributes for Safari / WhatsApp Browsers -->
+        <video id="video" autoplay playsinline webkit-playsinline muted></video>
         <canvas id="bg-canvas"></canvas>
         <canvas id="vfx-canvas"></canvas>
     </div>
@@ -180,15 +146,23 @@
     const bgCtx = bgCanvas.getContext('2d');
     const vfxCtx = vfxCanvas.getContext('2d', { alpha: true });
 
-    let width, height, cameraParams = {};
+    let width, height, cameraParams = { drawnW: 0, drawnH: 0, offsetX: 0, offsetY: 0 };
     let particles =[];
-    const MAX_PARTICLES = 400; 
+    const MAX_PARTICLES = 300; 
     
     let lastHandCenter = null;
+    let currentLandmarks = null;
     let anviHeartState = { active: false, x: 0, y: 0, scale: 0 };
     
-    // Premium Vibrant Colors
     const colorsList =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ff3366', '#a200ff', '#ffffff', '#ff88ff'];
+    const cache = { sparkles: {}, flowers: {} };
+
+    // Set Hand Skeleton Connections for Glowing Outline
+    const HAND_CONNECTIONS = [[0,1], [1,2], [2,3], [3,4],[0,5], [5,6], [6,7], [7,8],
+        [5,9], [9,10], [10,11], [11,12],[9,13], [13,14], [14,15],[15,16],
+        [13,17], [17,18], [18,19], [19,20],
+        [0,17]
+    ];
 
     function resize() {
         width = window.innerWidth;
@@ -199,68 +173,47 @@
     window.addEventListener('resize', resize);
     resize();
 
-    const cache = { sparkles: {}, flowers: {} };
-
     function createParticleCache() {
-        // 1. Sparkles
+        // Sparkles
         colorsList.forEach(color => {
             const cSparkle = document.createElement('canvas'); 
             cSparkle.width = 40; cSparkle.height = 40;
             const ctxS = cSparkle.getContext('2d');
-            ctxS.fillStyle = color; 
-            ctxS.shadowBlur = 12; ctxS.shadowColor = color;
+            ctxS.fillStyle = color; ctxS.shadowBlur = 12; ctxS.shadowColor = color;
             ctxS.beginPath(); ctxS.moveTo(20, 0); 
             ctxS.quadraticCurveTo(20, 20, 40, 20); ctxS.quadraticCurveTo(20, 20, 20, 40); 
-            ctxS.quadraticCurveTo(20, 20, 0, 20); ctxS.quadraticCurveTo(20, 20, 20, 0); 
-            ctxS.fill();
+            ctxS.quadraticCurveTo(20, 20, 0, 20); ctxS.quadraticCurveTo(20, 20, 20, 0); ctxS.fill();
             cache.sparkles[color] = cSparkle;
         });
 
-        // 2. Glowing Flowers
+        // Flowers
         colorsList.forEach(color => {
             const cFlow = document.createElement('canvas'); 
             cFlow.width = 60; cFlow.height = 60;
             const ctxF = cFlow.getContext('2d');
-            ctxF.translate(30, 30);
-            ctxF.shadowBlur = 12; ctxF.shadowColor = color;
+            ctxF.translate(30, 30); ctxF.shadowBlur = 12; ctxF.shadowColor = color;
             for(let i=0; i<5; i++) {
-                ctxF.beginPath();
-                ctxF.ellipse(0, -12, 6, 14, 0, 0, Math.PI*2);
-                ctxF.fillStyle = color;
-                ctxF.fill();
-                ctxF.rotate((Math.PI*2)/5);
+                ctxF.beginPath(); ctxF.ellipse(0, -12, 6, 14, 0, 0, Math.PI*2);
+                ctxF.fillStyle = color; ctxF.fill(); ctxF.rotate((Math.PI*2)/5);
             }
             ctxF.beginPath(); ctxF.arc(0,0, 5, 0, Math.PI*2); ctxF.fillStyle = '#fff'; ctxF.fill();
             cache.flowers[color] = cFlow;
         });
 
-        // 3. Proper Solid Glowing Heart
+        // Heart
         const cHeart = document.createElement('canvas'); 
         cHeart.width = 140; cHeart.height = 140;
         const ctxH = cHeart.getContext('2d');
         ctxH.translate(70, 60); 
-        
-        ctxH.beginPath();
-        ctxH.moveTo(0, -15);
-        ctxH.bezierCurveTo(-35, -55, -75, -5, 0, 55);
-        ctxH.bezierCurveTo(75, -5, 35, -55, 0, -15);
-        ctxH.closePath();
-
+        ctxH.beginPath(); ctxH.moveTo(0, -15);
+        ctxH.bezierCurveTo(-35, -55, -75, -5, 0, 55); ctxH.bezierCurveTo(75, -5, 35, -55, 0, -15); ctxH.closePath();
         let gradH = ctxH.createRadialGradient(0, -10, 5, 0, 0, 60);
-        gradH.addColorStop(0, '#ff4b82');
-        gradH.addColorStop(1, '#c20032');
-        ctxH.fillStyle = gradH; 
-        ctxH.shadowBlur = 25; 
-        ctxH.shadowColor = '#ff0055';
-        ctxH.fill();
+        gradH.addColorStop(0, '#ff4b82'); gradH.addColorStop(1, '#c20032');
+        ctxH.fillStyle = gradH; ctxH.shadowBlur = 25; ctxH.shadowColor = '#ff0055'; ctxH.fill();
 
-        // 3D Glassy Highlight for a premium feel
-        ctxH.beginPath();
-        ctxH.moveTo(-18, -25);
-        ctxH.bezierCurveTo(-30, -45, -5, -45, 0, -32);
+        ctxH.beginPath(); ctxH.moveTo(-18, -25); ctxH.bezierCurveTo(-30, -45, -5, -45, 0, -32);
         ctxH.bezierCurveTo(-5, -32, -12, -25, -18, -25);
-        ctxH.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctxH.fill();
+        ctxH.fillStyle = 'rgba(255, 255, 255, 0.45)'; ctxH.fill();
         cache.heart = cHeart;
     }
     createParticleCache();
@@ -270,11 +223,7 @@
     async function startApp() {
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('loading').style.display = 'block';
-
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
-
+        if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen().catch(() => {}); }
         initMediaPipe();
     }
 
@@ -284,79 +233,71 @@
         hands.onResults(onResults);
 
         try {
+            // 🚨 FIX: Lower optimal resolution for mobile support (640x480 max)
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
             });
             
-            // 🔥 BUG FIX: Forcing iOS/Mobile settings directly 🔥
-            video.setAttribute('playsinline', 'true');
-            video.setAttribute('autoplay', 'true');
-            video.muted = true;
             video.srcObject = stream;
+            video.setAttribute('playsinline', 'true'); // For iOS
+            video.setAttribute('webkit-playsinline', 'true');
+            video.muted = true;
             
-            // 🔥 BUG FIX: Using onloadeddata instead of onloadedmetadata 🔥
-            video.onloadeddata = async () => {
-                try {
-                    await video.play();
-                } catch(e) {
-                    console.log("Auto-play might be restricted, but stream is ready.");
-                }
-
-                document.getElementById('intro-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-                resize(); // Trigger manual resize to ensure full screen map
-                
-                async function detectionFrame() {
-                    try {
-                        // 🔥 BUG FIX: Sirf tabhi model chalega jab video ke frames actual mein decode ho chuke ho 🔥
-                        if (!video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
-                            await hands.send({ image: video });
-                        }
-                    } catch (e) {
-                        console.warn("Frame dropped", e);
+            video.onloadeddata = () => {
+                video.play().then(() => {
+                    document.getElementById('intro-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    resize();
+                    
+                    async function detectionFrame() {
+                        if (!video.paused && !video.ended) await hands.send({ image: video });
+                        requestAnimationFrame(detectionFrame);
                     }
-                    requestAnimationFrame(detectionFrame);
-                }
-                detectionFrame();
-                requestAnimationFrame(renderVFX);
+                    detectionFrame();
+                    requestAnimationFrame(renderVFX);
+                }).catch(e => console.log("Auto-play error:", e));
             };
         } catch (error) {
             console.error("Camera Error:", error);
             document.getElementById('loading').innerHTML = `
-                <span style="color:#ff4b82;">⚠️ Camera Access Denied or Blocked.</span><br><br>
+                <span style="color:#ff4b82;">⚠️ Camera Access Denied.</span><br><br>
                 <span style="font-size: 0.8rem; color:#fff; font-weight: normal;">
                 Make sure you allow permissions.<br>
-                <b>Note:</b> If you opened this link from Instagram/WhatsApp, click the top-right menu and choose <b>"Open in Chrome/Safari"</b>!
+                <b>Note:</b> If opened via Instagram/WhatsApp, click top-right menu and choose <b>"Open in Chrome/Browser"</b>.
                 </span>
             `;
         }
     }
 
+    // 🚨 FIX: Perfect Mirror Mapping + Screen Aspect Ratio Handling
     function mapCoords(landmark) {
-        let x = width - (landmark.x * cameraParams.w + cameraParams.x);
-        let y = landmark.y * cameraParams.h + cameraParams.y;
+        // (1 - landmark.x) gives exact mirror mapping
+        let x = cameraParams.offsetX + (1 - landmark.x) * cameraParams.drawnW;
+        let y = cameraParams.offsetY + landmark.y * cameraParams.drawnH;
         return { x, y };
     }
 
     function onResults(results) {
-        // 🔥 BUG FIX: Null check takki array/image error avoid ho sake 🔥
         if (!results.image) return;
 
-        bgCtx.save();
+        // Calculate responsive scale params continuously
         const scale = Math.max(width / results.image.width, height / results.image.height);
-        const w = results.image.width * scale, h = results.image.height * scale;
-        const x = (width - w) / 2, y = (height - h) / 2;
-        cameraParams = { w, h, x, y };
-        bgCtx.drawImage(results.image, x, y, w, h);
-        bgCtx.restore();
+        cameraParams.drawnW = results.image.width * scale;
+        cameraParams.drawnH = results.image.height * scale;
+        cameraParams.offsetX = (width - cameraParams.drawnW) / 2;
+        cameraParams.offsetY = (height - cameraParams.drawnH) / 2;
 
         if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+            currentLandmarks = null;
             anviHeartState.active = false; 
             lastHandCenter = null;
             return;
         }
 
-        const landmarks = results.multiHandLandmarks[0];
+        currentLandmarks = results.multiHandLandmarks[0];
+        let landmarks = currentLandmarks;
+
+        // Up detection using Y coordinates
         const isUp = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
         
         let indexUp = isUp(8, 6);
@@ -368,7 +309,7 @@
         let distThumbBase = Math.hypot(landmarks[3].x - landmarks[17].x, landmarks[3].y - landmarks[17].y);
         let thumbUp = distThumb > distThumbBase;
 
-        let activeTips =[];
+        let activeTips = [];
         if (thumbUp) activeTips.push(mapCoords(landmarks[4]));
         if (indexUp) activeTips.push(mapCoords(landmarks[8]));
         if (middleUp) activeTips.push(mapCoords(landmarks[12]));
@@ -376,36 +317,38 @@
         if (pinkyUp) activeTips.push(mapCoords(landmarks[20]));
 
         let fingersCount = activeTips.length;
-
         let center = mapCoords(landmarks[9]); 
+        
         let speed = 0;
         if (lastHandCenter) speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         lastHandCenter = center;
 
+        // 🚨 FIX: Center of Palm for 5-fingers Heart! (Between Wrist and Middle Finger base)
         if (fingersCount === 5) {
-            let palmWrist = mapCoords(landmarks[0]);
-            let targetX = (center.x + palmWrist.x) / 2;
-            let targetY = (center.y + palmWrist.y) / 2 - 40;
+            let wrist = mapCoords(landmarks[0]);
+            let palmCenterX = (wrist.x + center.x) / 2;
+            let palmCenterY = (wrist.y + center.y) / 2;
 
             anviHeartState.active = true;
-            anviHeartState.x = anviHeartState.x ? lerp(anviHeartState.x, targetX, 0.3) : targetX;
-            anviHeartState.y = anviHeartState.y ? lerp(anviHeartState.y, targetY, 0.3) : targetY;
+            anviHeartState.x = anviHeartState.x ? lerp(anviHeartState.x, palmCenterX, 0.4) : palmCenterX;
+            anviHeartState.y = anviHeartState.y ? lerp(anviHeartState.y, palmCenterY, 0.4) : palmCenterY;
         } else {
             anviHeartState.active = false;
         }
 
+        // 🚨 FIX: Particles emit EXACTLY from the top of the fingertip without heavy jitter
         if (fingersCount > 0 && fingersCount < 5) {
             let numSpawns = speed > 2 ? 3 : 1; 
             
             activeTips.forEach(pos => {
                 for(let i=0; i < numSpawns; i++) {
-                    let jitterX = pos.x + (Math.random() * 30 - 15);
-                    let jitterY = pos.y + (Math.random() * 30 - 15);
+                    let exactJitterX = pos.x + (Math.random() * 8 - 4);
+                    let exactJitterY = pos.y + (Math.random() * 8 - 4);
 
-                    if (fingersCount === 1) spawnParticle(jitterX, jitterY, 'big_heart');
-                    else if (fingersCount === 2) spawnParticle(jitterX, jitterY, 'butterfly');
-                    else if (fingersCount === 3) spawnParticle(jitterX, jitterY, 'flower');
-                    else if (fingersCount === 4) spawnParticle(jitterX, jitterY, 'sparkle'); 
+                    if (fingersCount === 1) spawnParticle(exactJitterX, exactJitterY, 'big_heart');
+                    else if (fingersCount === 2) spawnParticle(exactJitterX, exactJitterY, 'butterfly');
+                    else if (fingersCount === 3) spawnParticle(exactJitterX, exactJitterY, 'flower');
+                    else if (fingersCount === 4) spawnParticle(exactJitterX, exactJitterY, 'sparkle'); 
                 }
             });
         }
@@ -413,14 +356,11 @@
 
     function spawnParticle(x, y, type) {
         if (particles.length > MAX_PARTICLES) particles.shift(); 
-        
         particles.push({
             x: x, y: y,
-            vx: (Math.random() - 0.5) * 8, 
-            vy: (Math.random() - 0.5) * 8 - 2,
+            vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6 - 2,
             size: type === 'big_heart' ? Math.random() * 0.8 + 0.6 : Math.random() * 1.0 + 0.6,
-            life: 1.0, 
-            type: type, 
+            life: 1.0, type: type, 
             color: colorsList[Math.floor(Math.random() * colorsList.length)], 
             timeOffset: Math.random() * 1000
         });
@@ -440,46 +380,68 @@
 
     function renderAnviHeart(x, y, scale) {
         let pulse = 1 + Math.sin(Date.now() * 0.005) * 0.06; 
-        vfxCtx.save(); 
-        vfxCtx.translate(x, y); 
-        vfxCtx.scale(scale * pulse, scale * pulse);
+        vfxCtx.save(); vfxCtx.translate(x, y); vfxCtx.scale(scale * pulse, scale * pulse);
 
         let grad = vfxCtx.createRadialGradient(0, 0, 20, 0, 0, 220);
-        grad.addColorStop(0, 'rgba(255, 0, 120, 0.7)');
-        grad.addColorStop(0.5, 'rgba(255, 0, 120, 0.2)');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        vfxCtx.fillStyle = grad; 
-        vfxCtx.fillRect(-250, -250, 500, 500);
+        grad.addColorStop(0, 'rgba(255, 0, 120, 0.7)'); grad.addColorStop(0.5, 'rgba(255, 0, 120, 0.2)'); grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        vfxCtx.fillStyle = grad; vfxCtx.fillRect(-250, -250, 500, 500);
 
-        vfxCtx.save();
-        vfxCtx.rotate(Date.now() * 0.001);
-        vfxCtx.beginPath(); vfxCtx.arc(0, 0, 130, 0, Math.PI * 2);
-        vfxCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; vfxCtx.lineWidth = 2; vfxCtx.setLineDash([15, 20]); vfxCtx.stroke();
-        vfxCtx.restore();
+        vfxCtx.save(); vfxCtx.rotate(Date.now() * 0.001); vfxCtx.beginPath(); vfxCtx.arc(0, 0, 130, 0, Math.PI * 2);
+        vfxCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; vfxCtx.lineWidth = 2; vfxCtx.setLineDash([15, 20]); vfxCtx.stroke(); vfxCtx.restore();
 
         vfxCtx.drawImage(cache.heart, -110, -100, 220, 220);
-
-        vfxCtx.font = "bold 45px 'Dancing Script', cursive, sans-serif";
-        vfxCtx.textAlign = "center"; 
-        vfxCtx.textBaseline = "middle";
-        vfxCtx.shadowColor = "#ffffff"; 
-        vfxCtx.shadowBlur = 15; 
-        vfxCtx.fillStyle = "#ffffff";
-        vfxCtx.fillText("Anvi", 0, -10); 
-        vfxCtx.shadowBlur = 0; 
-
+        vfxCtx.font = "bold 45px 'Dancing Script', cursive, sans-serif"; vfxCtx.textAlign = "center"; vfxCtx.textBaseline = "middle";
+        vfxCtx.shadowColor = "#ffffff"; vfxCtx.shadowBlur = 15; vfxCtx.fillStyle = "#ffffff"; vfxCtx.fillText("Anvi", 0, -10); vfxCtx.shadowBlur = 0; 
+        
         vfxCtx.translate(-100, -60); vfxCtx.rotate(-0.3); drawRealisticButterfly(vfxCtx, '#00f3ff', 0);
         vfxCtx.rotate(0.3); vfxCtx.translate(200, 110); vfxCtx.rotate(0.5); drawRealisticButterfly(vfxCtx, '#ffb800', 500);
-
         vfxCtx.restore();
     }
 
+    // 🚨 FIX: Pure Black Background & Glowing Hand rendering
     function renderVFX() {
+        // Render Pure Black Background
+        bgCtx.fillStyle = '#000000';
+        bgCtx.fillRect(0, 0, width, height);
+
+        // Draw Glowing Skeleton Hand over black background (Person hidden)
+        if (currentLandmarks) {
+            bgCtx.save();
+            // Outer Glow Neon Line
+            bgCtx.strokeStyle = '#00f3ff';
+            bgCtx.lineWidth = 3;
+            bgCtx.lineCap = 'round';
+            bgCtx.shadowBlur = 15;
+            bgCtx.shadowColor = '#00f3ff';
+            
+            bgCtx.beginPath();
+            for(let i=0; i<HAND_CONNECTIONS.length; i++) {
+                let p1 = mapCoords(currentLandmarks[HAND_CONNECTIONS[i][0]]);
+                let p2 = mapCoords(currentLandmarks[HAND_CONNECTIONS[i][1]]);
+                bgCtx.moveTo(p1.x, p1.y);
+                bgCtx.lineTo(p2.x, p2.y);
+            }
+            bgCtx.stroke();
+
+            // Inner Bright White Line
+            bgCtx.strokeStyle = '#ffffff';
+            bgCtx.lineWidth = 1;
+            bgCtx.shadowBlur = 0;
+            bgCtx.stroke();
+
+            // Draw glowing node circles on joints
+            bgCtx.fillStyle = '#ffffff';
+            for(let i=0; i<currentLandmarks.length; i++) {
+                let p = mapCoords(currentLandmarks[i]);
+                bgCtx.beginPath(); bgCtx.arc(p.x, p.y, 3.5, 0, Math.PI*2); bgCtx.fill();
+            }
+            bgCtx.restore();
+        }
+
         vfxCtx.clearRect(0, 0, width, height);
 
         let targetScale = anviHeartState.active ? 1.2 : 0;
         anviHeartState.scale = lerp(anviHeartState.scale, targetScale, 0.15);
-
         if (anviHeartState.scale > 0.01) {
             renderAnviHeart(anviHeartState.x, anviHeartState.y, anviHeartState.scale);
         }
@@ -487,30 +449,21 @@
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.x += p.vx; p.y += p.vy; p.life -= 0.015; 
-
             if (p.life <= 0) { particles.splice(i, 1); continue; }
 
-            vfxCtx.save(); 
-            vfxCtx.translate(p.x, p.y); 
-            vfxCtx.globalAlpha = p.life;
-
+            vfxCtx.save(); vfxCtx.translate(p.x, p.y); vfxCtx.globalAlpha = p.life;
             if (p.type === 'big_heart') {
                 let beatScale = p.size * (1 + Math.sin((Date.now() + p.timeOffset) * 0.01) * 0.2);
-                vfxCtx.scale(beatScale, beatScale); 
-                vfxCtx.drawImage(cache.heart, -70, -60);
+                vfxCtx.scale(beatScale, beatScale); vfxCtx.drawImage(cache.heart, -70, -60);
             } 
             else if (p.type === 'flower') {
-                vfxCtx.scale(p.size * p.life, p.size * p.life);
-                vfxCtx.rotate(p.life * 3);
-                vfxCtx.drawImage(cache.flowers[p.color], -30, -30);
+                vfxCtx.scale(p.size * p.life, p.size * p.life); vfxCtx.rotate(p.life * 3); vfxCtx.drawImage(cache.flowers[p.color], -30, -30);
             }
             else if (p.type === 'sparkle') {
-                vfxCtx.scale(p.size * p.life, p.size * p.life); 
-                vfxCtx.drawImage(cache.sparkles[p.color], -20, -20);
+                vfxCtx.scale(p.size * p.life, p.size * p.life); vfxCtx.drawImage(cache.sparkles[p.color], -20, -20);
             } 
             else if (p.type === 'butterfly') {
-                vfxCtx.scale(p.size, p.size); 
-                drawRealisticButterfly(vfxCtx, p.color, p.timeOffset);
+                vfxCtx.scale(p.size, p.size); drawRealisticButterfly(vfxCtx, p.color, p.timeOffset);
             }
             vfxCtx.restore();
         }
