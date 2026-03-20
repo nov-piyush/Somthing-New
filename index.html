@@ -86,7 +86,17 @@
         #loading { display: none; text-align: center; font-size: 0.9rem; color: #00f3ff; margin-top: 15px; font-weight: 600; line-height: 1.5; }
         
         #app-container { display: none; position: relative; width: 100%; height: 100%; }
-        video { display: none; }
+        
+        /* 🔥 BUG FIX: Video element cannot be display:none for Mobile Browsers 🔥 */
+        video { 
+            position: absolute; 
+            opacity: 0; 
+            width: 1px; 
+            height: 1px; 
+            pointer-events: none; 
+            z-index: -10; 
+        }
+        
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         #bg-canvas { z-index: 1; filter: brightness(0.55) contrast(1.1); }
         #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
@@ -156,7 +166,8 @@
     </div>
 
     <div id="app-container">
-        <video id="video" autoplay playsinline muted></video>
+        <!-- 🔥 BUG FIX: Added extra attributes for iOS/Mobile support 🔥 -->
+        <video id="video" autoplay playsinline muted webkit-playsinline></video>
         <canvas id="bg-canvas"></canvas>
         <canvas id="vfx-canvas"></canvas>
     </div>
@@ -273,21 +284,36 @@
         hands.onResults(onResults);
 
         try {
-            // Standard WebRTC is much more universally supported across phones and browsers
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
             
+            // 🔥 BUG FIX: Forcing iOS/Mobile settings directly 🔥
+            video.setAttribute('playsinline', 'true');
+            video.setAttribute('autoplay', 'true');
+            video.muted = true;
             video.srcObject = stream;
             
-            video.onloadedmetadata = () => {
-                video.play();
+            // 🔥 BUG FIX: Using onloadeddata instead of onloadedmetadata 🔥
+            video.onloadeddata = async () => {
+                try {
+                    await video.play();
+                } catch(e) {
+                    console.log("Auto-play might be restricted, but stream is ready.");
+                }
+
                 document.getElementById('intro-screen').style.display = 'none';
                 document.getElementById('app-container').style.display = 'block';
+                resize(); // Trigger manual resize to ensure full screen map
                 
                 async function detectionFrame() {
-                    if (!video.paused && !video.ended) {
-                        await hands.send({ image: video });
+                    try {
+                        // 🔥 BUG FIX: Sirf tabhi model chalega jab video ke frames actual mein decode ho chuke ho 🔥
+                        if (!video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
+                            await hands.send({ image: video });
+                        }
+                    } catch (e) {
+                        console.warn("Frame dropped", e);
                     }
                     requestAnimationFrame(detectionFrame);
                 }
@@ -300,8 +326,7 @@
                 <span style="color:#ff4b82;">⚠️ Camera Access Denied or Blocked.</span><br><br>
                 <span style="font-size: 0.8rem; color:#fff; font-weight: normal;">
                 Make sure you allow permissions.<br>
-                <b>Note:</b> If you opened this file directly from a folder (file://), Chrome blocks the camera. 
-                Please use Firefox or Host the file on Netlify / Tiiny.host to share it!
+                <b>Note:</b> If you opened this link from Instagram/WhatsApp, click the top-right menu and choose <b>"Open in Chrome/Safari"</b>!
                 </span>
             `;
         }
@@ -314,6 +339,9 @@
     }
 
     function onResults(results) {
+        // 🔥 BUG FIX: Null check takki array/image error avoid ho sake 🔥
+        if (!results.image) return;
+
         bgCtx.save();
         const scale = Math.max(width / results.image.width, height / results.image.height);
         const w = results.image.width * scale, h = results.image.height * scale;
@@ -322,7 +350,6 @@
         bgCtx.drawImage(results.image, x, y, w, h);
         bgCtx.restore();
 
-        // If hand is removed/closed, immediately deactivate the state
         if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
             anviHeartState.active = false; 
             lastHandCenter = null;
@@ -341,7 +368,7 @@
         let distThumbBase = Math.hypot(landmarks[3].x - landmarks[17].x, landmarks[3].y - landmarks[17].y);
         let thumbUp = distThumb > distThumbBase;
 
-        let activeTips = [];
+        let activeTips =[];
         if (thumbUp) activeTips.push(mapCoords(landmarks[4]));
         if (indexUp) activeTips.push(mapCoords(landmarks[8]));
         if (middleUp) activeTips.push(mapCoords(landmarks[12]));
@@ -355,7 +382,6 @@
         if (lastHandCenter) speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         lastHandCenter = center;
 
-        // Anvi Heart Logic (5 Fingers Only)
         if (fingersCount === 5) {
             let palmWrist = mapCoords(landmarks[0]);
             let targetX = (center.x + palmWrist.x) / 2;
@@ -365,7 +391,6 @@
             anviHeartState.x = anviHeartState.x ? lerp(anviHeartState.x, targetX, 0.3) : targetX;
             anviHeartState.y = anviHeartState.y ? lerp(anviHeartState.y, targetY, 0.3) : targetY;
         } else {
-            // Heart is instantly deactivated if fingers != 5
             anviHeartState.active = false;
         }
 
@@ -413,14 +438,12 @@
         ctx.restore();
     }
 
-    // PREMIUM 5-FINGER SPELL
     function renderAnviHeart(x, y, scale) {
         let pulse = 1 + Math.sin(Date.now() * 0.005) * 0.06; 
         vfxCtx.save(); 
         vfxCtx.translate(x, y); 
         vfxCtx.scale(scale * pulse, scale * pulse);
 
-        // Huge Glowing Aura
         let grad = vfxCtx.createRadialGradient(0, 0, 20, 0, 0, 220);
         grad.addColorStop(0, 'rgba(255, 0, 120, 0.7)');
         grad.addColorStop(0.5, 'rgba(255, 0, 120, 0.2)');
@@ -428,17 +451,14 @@
         vfxCtx.fillStyle = grad; 
         vfxCtx.fillRect(-250, -250, 500, 500);
 
-        // Subtle Magic Circle Behind Heart
         vfxCtx.save();
         vfxCtx.rotate(Date.now() * 0.001);
         vfxCtx.beginPath(); vfxCtx.arc(0, 0, 130, 0, Math.PI * 2);
         vfxCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; vfxCtx.lineWidth = 2; vfxCtx.setLineDash([15, 20]); vfxCtx.stroke();
         vfxCtx.restore();
 
-        // Massive Beautiful Solid Heart
         vfxCtx.drawImage(cache.heart, -110, -100, 220, 220);
 
-        // "Anvi" Text Exactly Inside the Heart
         vfxCtx.font = "bold 45px 'Dancing Script', cursive, sans-serif";
         vfxCtx.textAlign = "center"; 
         vfxCtx.textBaseline = "middle";
@@ -448,7 +468,6 @@
         vfxCtx.fillText("Anvi", 0, -10); 
         vfxCtx.shadowBlur = 0; 
 
-        // Magic Floating Butterflies around the heart
         vfxCtx.translate(-100, -60); vfxCtx.rotate(-0.3); drawRealisticButterfly(vfxCtx, '#00f3ff', 0);
         vfxCtx.rotate(0.3); vfxCtx.translate(200, 110); vfxCtx.rotate(0.5); drawRealisticButterfly(vfxCtx, '#ffb800', 500);
 
@@ -458,8 +477,6 @@
     function renderVFX() {
         vfxCtx.clearRect(0, 0, width, height);
 
-        // Yeh loop heart ko perfectly bada / chhota hone me help karta hai
-        // bina stuck hue chahe hand detect ho ya na ho
         let targetScale = anviHeartState.active ? 1.2 : 0;
         anviHeartState.scale = lerp(anviHeartState.scale, targetScale, 0.15);
 
