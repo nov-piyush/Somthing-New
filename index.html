@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anvi's Spatial Magic</title>
     
-    <!-- 🚨 Added Official Camera Utils for 100% Mobile Browser Compatibility -->
+    <!-- Official Camera Utils for 100% Mobile Browser Compatibility -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     
@@ -73,11 +73,10 @@
         
         #app-container { display: none; position: relative; width: 100%; height: 100%; }
         
-        /* 🚨 FIX: Moved video out of screen securely so browsers don't pause it */
         video { position: absolute; top: -9999px; left: -9999px; width: 640px; height: 480px; z-index: -10; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        #bg-canvas { z-index: 1; }
+        #bg-canvas { z-index: 1; object-fit: cover; }
         #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
     </style>
 </head>
@@ -121,16 +120,14 @@
     let width, height, cameraParams = { drawnW: 0, drawnH: 0, offsetX: 0, offsetY: 0 };
     let particles =[];
     const MAX_PARTICLES = 300; 
-    let isAppReady = false; // Prevents showing black screen prematurely
+    let isAppReady = false; 
     
+    let latestFrame = null;
     let lastHandCenter = null;
-    let currentLandmarks = null;
     let anviHeartState = { active: false, x: 0, y: 0, scale: 0 };
     
     const colorsList =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ff3366', '#a200ff', '#ffffff', '#ff88ff'];
     const cache = { sparkles: {}, flowers: {} };
-
-    const HAND_CONNECTIONS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 
     function resize() {
         width = window.innerWidth; height = window.innerHeight;
@@ -178,20 +175,14 @@
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
         hands.onResults(onResults);
 
-        // 🚨 FIX: Using Camera Utils ensures playback on ALL browsers (WhatsApp/Safari)
         const camera = new Camera(video, {
-            onFrame: async () => {
-                await hands.send({image: video});
-            },
-            width: 640,
-            height: 480,
-            facingMode: 'user'
+            onFrame: async () => { await hands.send({image: video}); },
+            width: 640, height: 480, facingMode: 'user'
         });
 
         camera.start().then(() => {
-            // Camera granted! Show downloading message until the first frame is processed
             document.getElementById('loading').innerHTML = `
-                <span style="color:#00f3ff;">Downloading AI Magic...</span><br>
+                <span style="color:#00f3ff;">Starting Camera Magic...</span><br>
                 <span style="font-size: 0.75rem; color:rgba(255,255,255,0.7);">(Takes 5-10 seconds on Mobile Data)</span>
             `;
             requestAnimationFrame(renderVFX);
@@ -200,7 +191,6 @@
         });
     }
 
-    // 🚨 PERFECT MIRROR FIX: Exact Mapping
     function mapCoords(landmark) {
         let x = cameraParams.offsetX + (1 - landmark.x) * cameraParams.drawnW;
         let y = cameraParams.offsetY + landmark.y * cameraParams.drawnH;
@@ -208,7 +198,6 @@
     }
 
     function onResults(results) {
-        // 🚨 App is ready to show! First frame processed successfully
         if (!isAppReady) {
             isAppReady = true;
             document.getElementById('intro-screen').style.display = 'none';
@@ -217,6 +206,7 @@
         }
 
         if (!results.image) return;
+        latestFrame = results.image; // Store real camera frame for drawing
 
         const scale = Math.max(width / results.image.width, height / results.image.height);
         cameraParams.drawnW = results.image.width * scale;
@@ -225,14 +215,12 @@
         cameraParams.offsetY = (height - cameraParams.drawnH) / 2;
 
         if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-            currentLandmarks = null;
             anviHeartState.active = false; 
             lastHandCenter = null;
             return;
         }
 
-        currentLandmarks = results.multiHandLandmarks[0];
-        let landmarks = currentLandmarks;
+        let landmarks = results.multiHandLandmarks[0];
 
         const isUp = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
         
@@ -257,7 +245,7 @@
         if (lastHandCenter) speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         lastHandCenter = center;
 
-        // 🚨 FIX: Center of the Palm for 5-fingers Heart
+        // Center of the Palm
         if (fingersCount === 5) {
             let wrist = mapCoords(landmarks[0]);
             let palmCenterX = (wrist.x + center.x) / 2;
@@ -270,7 +258,7 @@
             anviHeartState.active = false;
         }
 
-        // 🚨 FIX: Particles emit EXACTLY from the top of the fingertip
+        // Emit from exactly the fingertips
         if (fingersCount > 0 && fingersCount < 5) {
             let numSpawns = speed > 2 ? 3 : 1; 
             
@@ -329,43 +317,16 @@
     }
 
     function renderVFX() {
-        // Render Pure Black Background Always
-        bgCtx.fillStyle = '#000000';
-        bgCtx.fillRect(0, 0, width, height);
-
-        // 🚨 Visual Feedback when hand is not in front of camera
-        if (isAppReady && !currentLandmarks) {
-            bgCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-            bgCtx.font = "600 1.2rem 'Inter', sans-serif";
-            bgCtx.textAlign = "center";
-            bgCtx.textBaseline = "middle";
-            bgCtx.fillText("Camera Active", width / 2, height / 2 - 15);
-            bgCtx.fillStyle = '#00f3ff';
-            bgCtx.font = "500 0.95rem 'Inter', sans-serif";
-            bgCtx.fillText("Show your hand ✋", width / 2, height / 2 + 15);
-        }
-
-        // Draw Glowing Skeleton Hand over black background (Person hidden)
-        if (currentLandmarks) {
+        // Draw Real Camera Feed (Mirrored)
+        if (latestFrame) {
             bgCtx.save();
-            bgCtx.strokeStyle = '#00f3ff'; bgCtx.lineWidth = 3; bgCtx.lineCap = 'round';
-            bgCtx.shadowBlur = 15; bgCtx.shadowColor = '#00f3ff';
-            
-            bgCtx.beginPath();
-            for(let i=0; i<HAND_CONNECTIONS.length; i++) {
-                let p1 = mapCoords(currentLandmarks[HAND_CONNECTIONS[i][0]]);
-                let p2 = mapCoords(currentLandmarks[HAND_CONNECTIONS[i][1]]);
-                bgCtx.moveTo(p1.x, p1.y); bgCtx.lineTo(p2.x, p2.y);
-            }
-            bgCtx.stroke();
-
-            bgCtx.strokeStyle = '#ffffff'; bgCtx.lineWidth = 1; bgCtx.shadowBlur = 0; bgCtx.stroke();
-            bgCtx.fillStyle = '#ffffff';
-            for(let i=0; i<currentLandmarks.length; i++) {
-                let p = mapCoords(currentLandmarks[i]);
-                bgCtx.beginPath(); bgCtx.arc(p.x, p.y, 3.5, 0, Math.PI*2); bgCtx.fill();
-            }
+            // Mirror flip exactly mapping with our coordinates
+            bgCtx.translate(width, 0);
+            bgCtx.scale(-1, 1);
+            bgCtx.drawImage(latestFrame, cameraParams.offsetX, cameraParams.offsetY, cameraParams.drawnW, cameraParams.drawnH);
             bgCtx.restore();
+        } else {
+            bgCtx.clearRect(0, 0, width, height);
         }
 
         vfxCtx.clearRect(0, 0, width, height);
