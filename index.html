@@ -261,25 +261,11 @@ async function startApp() {
     document.getElementById('startBtn').style.display = 'none';
     document.getElementById('loading').style.display = 'block';
 
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
-        });
-
-        video.srcObject = stream;
-        await video.play();
-
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-        }
-
-        initMediaPipe();
-
-    } catch (err) {
-        console.error(err);
-        alert("Camera open nahi hua: " + err.message);
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
     }
+
+    initMediaPipe();
 }
     function initMediaPipe() {
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
@@ -302,8 +288,7 @@ async function startApp() {
 
     function onResults(results) {
         bgCtx.save();
-        bgCtx.scale(-1, 1); bgCtx.translate(-width, 0);
-        th.max(width / results.image.width, height / results.image.height);
+        const scale = Math.max(width / results.image.width, height / results.image.height);
         const w = results.image.width * scale, h = results.image.height * scale;
         const x = (width - w) / 2, y = (height - h) / 2;
         cameraParams = { w, h, x, y };
