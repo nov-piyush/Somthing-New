@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anvi's Spatial Magic</title>
     <!-- MediaPipe Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     
     <style>
@@ -84,9 +83,8 @@
         }
         .start-btn:active { transform: scale(0.95); box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2); }
 
-        #loading { display: none; text-align: center; font-size: 0.9rem; color: #00f3ff; margin-top: 15px; font-weight: 600; animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
-
+        #loading { display: none; text-align: center; font-size: 0.9rem; color: #00f3ff; margin-top: 15px; font-weight: 600; line-height: 1.5; }
+        
         #app-container { display: none; position: relative; width: 100%; height: 100%; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -153,7 +151,7 @@
             </div>
 
             <button id="startBtn" class="start-btn" onclick="startApp()">Unlock The Magic</button>
-            <div id="loading">Awakening the magic...</div>
+            <div id="loading">Awakening the magic...<br><span style="font-size:0.75rem;color:rgba(255,255,255,0.6);">(Please allow camera access)</span></div>
         </div>
     </div>
 
@@ -257,27 +255,56 @@
     createParticleCache();
 
     const lerp = (a, b, t) => a + (b - a) * t;
-async function startApp() {
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('loading').style.display = 'block';
 
-    if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    async function startApp() {
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+
+        initMediaPipe();
     }
 
-    initMediaPipe();
-}
-    function initMediaPipe() {
+    async function initMediaPipe() {
         const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
         hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
         hands.onResults(onResults);
 
-        const camera = new Camera(video, { onFrame: async () => { await hands.send({ image: video }); }, width: 1280, height: 720 });
-        camera.start().then(() => {
-            document.getElementById('intro-screen').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
-            requestAnimationFrame(renderVFX);
-        });
+        try {
+            // Standard WebRTC is much more universally supported across phones and browsers
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            
+            video.srcObject = stream;
+            
+            video.onloadedmetadata = () => {
+                video.play();
+                document.getElementById('intro-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                async function detectionFrame() {
+                    if (!video.paused && !video.ended) {
+                        await hands.send({ image: video });
+                    }
+                    requestAnimationFrame(detectionFrame);
+                }
+                detectionFrame();
+                requestAnimationFrame(renderVFX);
+            };
+        } catch (error) {
+            console.error("Camera Error:", error);
+            document.getElementById('loading').innerHTML = `
+                <span style="color:#ff4b82;">⚠️ Camera Access Denied or Blocked.</span><br><br>
+                <span style="font-size: 0.8rem; color:#fff; font-weight: normal;">
+                Make sure you allow permissions.<br>
+                <b>Note:</b> If you opened this file directly from a folder (file://), Chrome blocks the camera. 
+                Please use Firefox or Host the file on Netlify / Tiiny.host to share it!
+                </span>
+            `;
+        }
     }
 
     function mapCoords(landmark) {
@@ -295,8 +322,9 @@ async function startApp() {
         bgCtx.drawImage(results.image, x, y, w, h);
         bgCtx.restore();
 
+        // If hand is removed/closed, immediately deactivate the state
         if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-            anviHeartState.active = false;
+            anviHeartState.active = false; 
             lastHandCenter = null;
             return;
         }
@@ -313,8 +341,7 @@ async function startApp() {
         let distThumbBase = Math.hypot(landmarks[3].x - landmarks[17].x, landmarks[3].y - landmarks[17].y);
         let thumbUp = distThumb > distThumbBase;
 
-        // Collect all active fingers to fix the bug where particles only emit from one finger
-        let activeTips =[];
+        let activeTips = [];
         if (thumbUp) activeTips.push(mapCoords(landmarks[4]));
         if (indexUp) activeTips.push(mapCoords(landmarks[8]));
         if (middleUp) activeTips.push(mapCoords(landmarks[12]));
@@ -328,7 +355,7 @@ async function startApp() {
         if (lastHandCenter) speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         lastHandCenter = center;
 
-        // 5 Fingers - Anvisha Spell
+        // Anvi Heart Logic (5 Fingers Only)
         if (fingersCount === 5) {
             let palmWrist = mapCoords(landmarks[0]);
             let targetX = (center.x + palmWrist.x) / 2;
@@ -337,16 +364,14 @@ async function startApp() {
             anviHeartState.active = true;
             anviHeartState.x = anviHeartState.x ? lerp(anviHeartState.x, targetX, 0.3) : targetX;
             anviHeartState.y = anviHeartState.y ? lerp(anviHeartState.y, targetY, 0.3) : targetY;
-            anviHeartState.scale = lerp(anviHeartState.scale, 1.2, 0.15); 
         } else {
+            // Heart is instantly deactivated if fingers != 5
             anviHeartState.active = false;
-            anviHeartState.scale = lerp(anviHeartState.scale, 0, 0.2);
         }
 
         if (fingersCount > 0 && fingersCount < 5) {
             let numSpawns = speed > 2 ? 3 : 1; 
             
-            // Loop through all active fingers and emit particles from each
             activeTips.forEach(pos => {
                 for(let i=0; i < numSpawns; i++) {
                     let jitterX = pos.x + (Math.random() * 30 - 15);
@@ -413,7 +438,7 @@ async function startApp() {
         // Massive Beautiful Solid Heart
         vfxCtx.drawImage(cache.heart, -110, -100, 220, 220);
 
-        // "Anvisha" Text Exactly Inside the Heart
+        // "Anvi" Text Exactly Inside the Heart
         vfxCtx.font = "bold 45px 'Dancing Script', cursive, sans-serif";
         vfxCtx.textAlign = "center"; 
         vfxCtx.textBaseline = "middle";
@@ -432,6 +457,11 @@ async function startApp() {
 
     function renderVFX() {
         vfxCtx.clearRect(0, 0, width, height);
+
+        // Yeh loop heart ko perfectly bada / chhota hone me help karta hai
+        // bina stuck hue chahe hand detect ho ya na ho
+        let targetScale = anviHeartState.active ? 1.2 : 0;
+        anviHeartState.scale = lerp(anviHeartState.scale, targetScale, 0.15);
 
         if (anviHeartState.scale > 0.01) {
             renderAnviHeart(anviHeartState.x, anviHeartState.y, anviHeartState.scale);
