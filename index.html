@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Premium Spatial VFX Tracker</title>
+    <title>Premium Spatial VFX Tracker 2.0</title>
     <!-- MediaPipe Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -48,19 +48,19 @@
         }
 
         h1 {
-            font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; text-align: center;
+            font-size: 2.2rem; font-weight: 700; letter-spacing: -0.5px; text-align: center;
             background: linear-gradient(135deg, #fff 0%, #00f3ff 50%, #ff00ea 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;
         }
 
         .subtitle {
-            font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 25px;
+            font-size: 0.95rem; color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 25px;
         }
 
         .feature-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         
         .feature { display: flex; align-items: flex-start; gap: 12px; }
-        .feature-icon { font-size: 1.4rem; }
+        .feature-icon { font-size: 1.5rem; }
         .feature-text h3 { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
         .feature-text p { font-size: 0.8rem; color: rgba(255,255,255,0.6); line-height: 1.4; }
 
@@ -80,64 +80,63 @@
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        #bg-canvas { z-index: 1; filter: brightness(0.7) contrast(1.1); }
-        #draw-canvas { z-index: 2; pointer-events: none; } /* Permanent Drawing */
-        #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; } /* Particles */
+        #bg-canvas { z-index: 1; filter: brightness(0.6) contrast(1.1); }
+        #draw-canvas { z-index: 2; pointer-events: none; } 
+        #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
 
         #flash {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 10; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-out;
+            background: white; z-index: 10; opacity: 0; pointer-events: none; 
+            transition: opacity 0.3s ease-out; mix-blend-mode: overlay;
         }
     </style>
 </head>
 <body>
 
-    <!-- Apple Vision Intro UI -->
     <div id="intro-screen">
         <div class="ambient-orb orb-1"></div>
         <div class="ambient-orb orb-2"></div>
         
         <div class="glass-card">
-            <h1>Spatial Magic</h1>
-            <div class="subtitle">Premium Hand Tracking Gestures</div>
+            <h1>Spatial Magic 2.0</h1>
+            <div class="subtitle">Optimized Hand Tracking & Realistic VFX</div>
             
             <div class="feature-list">
                 <div class="feature">
                     <div class="feature-icon">☝️</div>
                     <div class="feature-text">
-                        <h3>1 Finger (Draw & Shake)</h3>
-                        <p>Draw permanent 3D hearts to write names. Hold still for a beating heart. Shake for Glowing Bubbles.</p>
+                        <h3>1 Finger (Smooth Draw & Shake)</h3>
+                        <p>Draw permanent 3D names beautifully. Hold still for heartbeat. Shake for Bubbles.</p>
                     </div>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">✌️</div>
                     <div class="feature-text">
                         <h3>2 Fingers Shake</h3>
-                        <p>Releases high-quality colorful fluttering Butterflies.</p>
+                        <p>Releases Multi-Color Realistic Butterflies from fingertips.</p>
                     </div>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">🤟</div>
                     <div class="feature-text">
                         <h3>3 & 4 Fingers Shake</h3>
-                        <p>3 Fingers: Magic Sparkles. 4 Fingers: The Ultimate Mix of all VFX.</p>
+                        <p>3 Fingers: Magic Sparkles. 4 Fingers: Ultimate VFX Mix.</p>
                     </div>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">✋🏻</div>
                     <div class="feature-text">
-                        <h3>5 Fingers (Erase & 3D Burst)</h3>
-                        <p>Hold flat to erase drawings. Shake towards camera for a 3D Splash Effect coming at you!</p>
+                        <h3>5 Fingers (Erase & Burst)</h3>
+                        <p>Hold flat to safely erase. Shake forward for a 3D Splash Effect!</p>
                     </div>
                 </div>
             </div>
 
             <button id="startBtn" class="start-btn" onclick="startApp()">Enter Experience</button>
-            <div id="loading">Calibrating Spatial Lenses...</div>
+            <div id="loading">Calibrating Cameras & Engines...</div>
         </div>
     </div>
 
-    <!-- Engine Container -->
     <div id="app-container">
         <video id="video" autoplay playsinline></video>
         <canvas id="bg-canvas"></canvas>
@@ -159,9 +158,19 @@
     let width, height, cameraParams = {};
     let particles =[];
     let isTracking = false;
-    let prevIndexPos = null;
+    
+    // Smoothing Variables
+    let smoothedIndex = null;
     let lastHandCenter = null;
     let lastDrawTime = 0;
+    let lastEraseTime = 0;
+    let lastSpawnTime = 0;
+
+    // Pre-render 3D Heart Brush to prevent HANGING
+    const brushCanvas = document.createElement('canvas');
+    brushCanvas.width = 60; brushCanvas.height = 60;
+    const brushCtx = brushCanvas.getContext('2d');
+    create3DBrush();
 
     function resize() {
         width = window.innerWidth;
@@ -170,6 +179,9 @@
     }
     window.addEventListener('resize', resize);
     resize();
+
+    // Lerp function for Smooth Name Drawing Tracking
+    const lerp = (a, b, t) => a + (b - a) * t;
 
     async function startApp() {
         document.getElementById('startBtn').style.display = 'none';
@@ -188,8 +200,8 @@
         hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.75,
-            minTrackingConfidence: 0.75
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
         });
 
         hands.onResults(onResults);
@@ -207,7 +219,6 @@
         });
     }
 
-    // Mapping coordinates to screen
     function mapCoords(landmark) {
         let x = width - (landmark.x * cameraParams.w + cameraParams.x);
         let y = landmark.y * cameraParams.h + cameraParams.y;
@@ -215,7 +226,6 @@
     }
 
     function onResults(results) {
-        // Draw Background
         bgCtx.save();
         bgCtx.scale(-1, 1);
         bgCtx.translate(-width, 0);
@@ -229,88 +239,107 @@
         bgCtx.restore();
 
         if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-            prevIndexPos = null;
+            smoothedIndex = null;
             lastHandCenter = null;
             return;
         }
 
         const landmarks = results.multiHandLandmarks[0];
         
-        // Finger Counting Logic
+        // Accurate Finger Counting
         const isUp = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
         let indexUp = isUp(8, 6);
         let middleUp = isUp(12, 10);
         let ringUp = isUp(16, 14);
         let pinkyUp = isUp(20, 18);
         
-        let fingersCount = [indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
+        let fingersCount =[indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
         
-        // Shake Detection (Based on wrist/palm center)
+        // Shake Detection
         let center = mapCoords(landmarks[0]);
         let speed = 0;
         if (lastHandCenter) {
             speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         }
         lastHandCenter = center;
-        let isShaking = speed > 25; // Hand is moving fast
+        let isShaking = speed > 30; 
+
+        // Calculate Emission Point directly from active fingertips
+        let activeFingers = [];
+        if (indexUp) activeFingers.push(mapCoords(landmarks[8]));
+        if (middleUp) activeFingers.push(mapCoords(landmarks[12]));
+        if (ringUp) activeFingers.push(mapCoords(landmarks[16]));
+        if (pinkyUp) activeFingers.push(mapCoords(landmarks[20]));
+
+        let emitX = center.x, emitY = center.y;
+        if (activeFingers.length > 0) {
+            emitX = activeFingers.reduce((sum, p) => sum + p.x, 0) / activeFingers.length;
+            emitY = activeFingers.reduce((sum, p) => sum + p.y, 0) / activeFingers.length;
+        }
+
+        let rawIndexPos = mapCoords(landmarks[8]);
         
-        let indexPos = mapCoords(landmarks[8]);
+        // Smooth Tracking for Drawing
+        if (!smoothedIndex) {
+            smoothedIndex = { x: rawIndexPos.x, y: rawIndexPos.y };
+        } else {
+            smoothedIndex.x = lerp(smoothedIndex.x, rawIndexPos.x, 0.4);
+            smoothedIndex.y = lerp(smoothedIndex.y, rawIndexPos.y, 0.4);
+        }
+
+        let canSpawn = Date.now() - lastSpawnTime > 40; // Throttle to prevent hangs
 
         // ================= GESTURE ACTIONS ================= //
 
-        // 5 Fingers (✋🏻)
+        // 5 Fingers - Erase or Splash
         if (fingersCount === 4 && landmarks[4].x < landmarks[3].x) { 
-            if (isShaking) {
-                // 3D Burst towards screen
-                spawnBurstTowardsCamera(center.x, center.y);
-            } else {
-                // Erase Drawing
-                if(Date.now() - lastDrawTime > 1000) eraseCanvas();
+            if (isShaking && canSpawn) {
+                spawnBurstTowardsCamera(emitX, emitY);
+                lastSpawnTime = Date.now();
+            } else if (!isShaking && Date.now() - lastEraseTime > 1500) {
+                eraseCanvas();
             }
-            prevIndexPos = null;
+            smoothedIndex = null;
             return;
         }
 
-        // 1 Finger (Index Only)
+        // 1 Finger - Draw & Bubble
         if (fingersCount === 1 && indexUp) {
-            if (isShaking) {
-                spawnParticle(indexPos.x, indexPos.y, 'bubble');
-                if(Math.random() > 0.5) spawnParticle(indexPos.x, indexPos.y, 'heart');
-                prevIndexPos = null;
+            if (isShaking && canSpawn) {
+                spawnParticle(emitX, emitY, 'bubble');
+                lastSpawnTime = Date.now();
+                smoothedIndex = null; // Don't draw while shaking
             } else {
-                // Draw Mode (Writing Name)
-                if (prevIndexPos) {
-                    let moveDist = Math.hypot(indexPos.x - prevIndexPos.x, indexPos.y - prevIndexPos.y);
-                    if (moveDist > 2 && moveDist < 100) {
-                        drawPermanent3DHeartPath(prevIndexPos, indexPos);
-                        lastDrawTime = Date.now();
-                    } else if (moveDist < 2) {
-                        // Standing still - Heartbeat
-                        if (Math.random() > 0.8) spawnParticle(indexPos.x, indexPos.y, 'beating_heart');
-                    }
+                let moveDist = Math.hypot(rawIndexPos.x - smoothedIndex.x, rawIndexPos.y - smoothedIndex.y);
+                if (speed > 2 && speed < 50) {
+                    drawPermanent3DHeartPath(smoothedIndex, rawIndexPos);
+                } else if (speed < 2 && canSpawn && Math.random() > 0.8) {
+                    spawnParticle(emitX, emitY, 'beating_heart');
+                    lastSpawnTime = Date.now();
                 }
-                prevIndexPos = indexPos;
             }
         } else {
-            prevIndexPos = null; // Break drawing line
+            smoothedIndex = null; // Break line if more fingers open
         }
 
-        // 2 Fingers Shake
-        if (fingersCount === 2 && indexUp && middleUp && isShaking) {
-            spawnParticle(center.x, center.y - 50, 'butterfly');
+        // 2 Fingers - Butterflies (Rang Birangi)
+        if (fingersCount === 2 && indexUp && middleUp && isShaking && canSpawn) {
+            spawnParticle(emitX, emitY, 'butterfly');
+            lastSpawnTime = Date.now();
         }
 
-        // 3 Fingers Shake
-        if (fingersCount === 3 && indexUp && middleUp && ringUp && isShaking) {
-            spawnParticle(center.x, center.y, 'sparkle');
-            spawnParticle(center.x + (Math.random()*60-30), center.y, 'sparkle');
+        // 3 Fingers - Sparkles
+        if (fingersCount === 3 && indexUp && middleUp && ringUp && isShaking && canSpawn) {
+            spawnParticle(emitX, emitY, 'sparkle');
+            spawnParticle(emitX + (Math.random()*60-30), emitY, 'sparkle');
+            lastSpawnTime = Date.now();
         }
 
-        // 4 Fingers Shake
-        if (fingersCount === 4 && isShaking) {
-            spawnParticle(center.x, center.y, 'heart');
-            spawnParticle(center.x, center.y, 'butterfly');
-            spawnParticle(center.x, center.y, 'sparkle');
+        // 4 Fingers - Ultimate Mix
+        if (fingersCount === 4 && isShaking && canSpawn) {
+            let types = ['heart', 'butterfly', 'sparkle'];
+            spawnParticle(emitX, emitY, types[Math.floor(Math.random() * types.length)]);
+            lastSpawnTime = Date.now();
         }
     }
 
@@ -319,88 +348,111 @@
     function eraseCanvas() {
         drawCtx.clearRect(0, 0, width, height);
         let flash = document.getElementById('flash');
-        flash.style.opacity = '0.5';
-        setTimeout(() => flash.style.opacity = '0', 200);
-        lastDrawTime = Date.now(); // Prevent instant re-erase
+        flash.style.opacity = '0.6';
+        setTimeout(() => flash.style.opacity = '0', 250);
+        lastEraseTime = Date.now();
     }
 
-    // Draw Name Permanently using High Quality 3D Stamp
+    // Cache the 3D Brush to prevent lag
+    function create3DBrush() {
+        brushCtx.clearRect(0, 0, 60, 60);
+        brushCtx.translate(30, 30);
+        brushCtx.scale(0.8, 0.8);
+
+        // Gradient
+        let grad = brushCtx.createRadialGradient(0, -5, 0, 0, 0, 25);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.4, '#ff007f');
+        grad.addColorStop(1, '#800040');
+
+        brushCtx.fillStyle = grad;
+        brushCtx.shadowColor = '#ff00ea';
+        brushCtx.shadowBlur = 10;
+        
+        // Base Heart
+        brushCtx.beginPath();
+        brushCtx.moveTo(0, 8);
+        brushCtx.bezierCurveTo(-15, -8, -30, 8, 0, 25);
+        brushCtx.bezierCurveTo(30, 8, 15, -8, 0, 8);
+        brushCtx.fill();
+
+        // 3D Highlight Specular Gloss
+        brushCtx.shadowBlur = 0;
+        brushCtx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        brushCtx.beginPath();
+        brushCtx.ellipse(-8, 2, 4, 8, -Math.PI / 4, 0, Math.PI * 2);
+        brushCtx.fill();
+    }
+
     function drawPermanent3DHeartPath(p1, p2) {
         let dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        let steps = Math.max(1, Math.floor(dist / 8)); // Interpolate to make smooth line
+        if (dist < 1) return;
+        let steps = Math.max(1, Math.floor(dist / 4)); 
         
         for (let i = 0; i <= steps; i++) {
             let x = p1.x + (p2.x - p1.x) * (i / steps);
             let y = p1.y + (p2.y - p1.y) * (i / steps);
-            
-            drawCtx.save();
-            drawCtx.translate(x, y);
-            drawCtx.scale(0.5, 0.5); // Stamp size
-            
-            // Premium Gradient Glow
-            let grad = drawCtx.createRadialGradient(0, 0, 0, 0, 0, 20);
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.3, '#ff007f');
-            grad.addColorStop(1, '#800040');
-
-            drawCtx.fillStyle = grad;
-            drawCtx.shadowColor = '#ff00ea';
-            drawCtx.shadowBlur = 15;
-            
-            renderSVGHeart(drawCtx, 20);
-            drawCtx.fill();
-            drawCtx.restore();
+            // Draw optimized cached brush
+            drawCtx.drawImage(brushCanvas, x - 15, y - 15, 30, 30);
         }
     }
 
     function spawnParticle(x, y, type) {
-        if(particles.length > 150) particles.shift(); // Performance limit
+        // Prevent hanging by strictly limiting particles
+        while (particles.length > 80) particles.shift(); 
 
-        let colors =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ffffff'];
+        // Multicolor Vibrant Palette
+        let colors =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ff3366', '#a200ff', '#ffffff'];
         let color = colors[Math.floor(Math.random() * colors.length)];
         
         particles.push({
             x: x + (Math.random() * 40 - 20),
             y: y + (Math.random() * 40 - 20),
-            vx: (Math.random() - 0.5) * 6,
-            vy: (Math.random() - 0.5) * 6 - 2, // General upward drift
-            size: Math.random() * 15 + 10,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5 - 3, 
+            size: Math.random() * 12 + 12,
             life: 1.0,
             type: type,
             color: color,
             timeOffset: Math.random() * 100,
-            z: 1 // For 3D forward effect
+            z: 1 
         });
     }
 
     function spawnBurstTowardsCamera(x, y) {
-        let types =['heart', 'bubble', 'sparkle'];
-        for(let i=0; i<8; i++) {
+        let types = ['heart', 'bubble', 'sparkle'];
+        for(let i=0; i<6; i++) {
             let p = {
-                x: x + (Math.random() * 100 - 50),
-                y: y + (Math.random() * 100 - 50),
-                vx: (Math.random() - 0.5) * 15,
-                vy: (Math.random() - 0.5) * 15,
-                size: Math.random() * 10 + 5,
+                x: x + (Math.random() * 80 - 40),
+                y: y + (Math.random() * 80 - 40),
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.5) * 12,
+                size: Math.random() * 10 + 8,
                 life: 1.2,
                 type: types[Math.floor(Math.random() * types.length)],
                 color: '#fff',
                 timeOffset: Math.random() * 100,
-                z: 0.1, // Starts far away
-                vz: 0.15 // Speed coming towards screen
+                z: 0.1, 
+                vz: 0.15 
             };
             particles.push(p);
         }
     }
 
-    // --- SVG Canvas Paths ---
+    // --- High-Quality Render Functions ---
 
-    function renderSVGHeart(ctx, size) {
+    function render3DHeartSVG(ctx, size) {
         ctx.beginPath();
         ctx.moveTo(0, size * 0.3);
         ctx.bezierCurveTo(-size * 0.5, -size * 0.3, -size, size * 0.3, 0, size);
         ctx.bezierCurveTo(size, size * 0.3, size * 0.5, -size * 0.3, 0, size * 0.3);
-        ctx.closePath();
+        ctx.fill();
+
+        // 3D Specular reflection
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(-size * 0.3, size * 0.1, size * 0.15, size * 0.25, -Math.PI/4, 0, Math.PI*2);
+        ctx.fill();
     }
 
     function renderSVGBubble(ctx, size) {
@@ -409,10 +461,10 @@
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.fill();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.stroke();
         
-        // Specular highlight (Chamak)
+        // Chamak (Highlight)
         ctx.beginPath();
         ctx.arc(-size * 0.3, -size * 0.3, size * 0.2, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -426,30 +478,49 @@
         ctx.quadraticCurveTo(0, 0, 0, size);
         ctx.quadraticCurveTo(0, 0, -size, 0);
         ctx.quadraticCurveTo(0, 0, 0, -size);
-        ctx.closePath();
+        ctx.fill();
     }
 
-    function renderSVGButterfly(ctx, size, timeOffset) {
-        let flap = Math.abs(Math.sin((Date.now() + timeOffset) * 0.015)); // Flapping speed
+    function renderRealisticButterfly(ctx, size, timeOffset, color) {
+        let flap = Math.abs(Math.sin((Date.now() + timeOffset) * 0.015)); 
         
         ctx.save();
-        ctx.scale(flap + 0.1, 1);
+        ctx.scale(flap * 0.8 + 0.2, 1); 
         
-        // Wing Color
-        ctx.fillStyle = "rgba(255, 50, 150, 0.85)";
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "#ff00ea";
-
-        // Left Wing
+        // Butterfly Body
+        ctx.fillStyle = '#222';
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(-size*1.2, -size*1.2, -size*1.8, size*0.8, 0, size);
+        ctx.ellipse(0, 0, size * 0.15, size * 0.7, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Right Wing
+        // Wings
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.85;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = color;
+
+        // Top Right Wing
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(size*1.2, -size*1.2, size*1.8, size*0.8, 0, size);
+        ctx.moveTo(size * 0.1, -size * 0.2);
+        ctx.bezierCurveTo(size * 1.5, -size * 1.5, size * 2.0, size * 0.2, size * 0.2, size * 0.4);
+        ctx.fill();
+        
+        // Bottom Right Wing
+        ctx.beginPath();
+        ctx.moveTo(size * 0.1, size * 0.2);
+        ctx.bezierCurveTo(size * 1.2, size * 1.5, size * 0.5, size * 1.8, size * 0.1, size * 0.6);
+        ctx.fill();
+
+        // Top Left Wing
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, -size * 0.2);
+        ctx.bezierCurveTo(-size * 1.5, -size * 1.5, -size * 2.0, size * 0.2, -size * 0.2, size * 0.4);
+        ctx.fill();
+        
+        // Bottom Left Wing
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, size * 0.2);
+        ctx.bezierCurveTo(-size * 1.2, size * 1.5, -size * 0.5, size * 1.8, -size * 0.1, size * 0.6);
         ctx.fill();
 
         ctx.restore();
@@ -462,16 +533,14 @@
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             
-            // Movement Updates
             p.x += p.vx;
             p.y += p.vy;
             
-            // 3D Z-axis logic (Splash towards camera)
             if (p.vz) {
                 p.z += p.vz;
-                p.life -= 0.015; // Fades out slightly slower
+                p.life -= 0.02; 
             } else {
-                p.life -= 0.02; // Normal fade
+                p.life -= 0.015; 
             }
 
             if (p.life <= 0) {
@@ -479,18 +548,13 @@
                 continue;
             }
 
-            // Render Particle
             vfxCtx.save();
             
-            // Calculate 3D projection if needed
             let drawX = p.vz ? p.x + (p.x - width/2) * (p.z - 1) * 0.2 : p.x;
             let drawY = p.vz ? p.y + (p.y - height/2) * (p.z - 1) * 0.2 : p.y;
             let scale = p.vz ? p.z : 1;
 
-            if(p.type === 'beating_heart') {
-                // Heartbeat pulse effect
-                scale = 1 + Math.sin(Date.now() * 0.01) * 0.3; 
-            }
+            if(p.type === 'beating_heart') scale = 1 + Math.sin(Date.now() * 0.01) * 0.3; 
 
             vfxCtx.translate(drawX, drawY);
             vfxCtx.scale(scale, scale);
@@ -499,9 +563,8 @@
             if (p.type === 'heart' || p.type === 'beating_heart') {
                 vfxCtx.fillStyle = p.color;
                 vfxCtx.shadowColor = p.color;
-                vfxCtx.shadowBlur = 20;
-                renderSVGHeart(vfxCtx, p.size);
-                vfxCtx.fill();
+                vfxCtx.shadowBlur = 15;
+                render3DHeartSVG(vfxCtx, p.size);
             } 
             else if (p.type === 'bubble') {
                 renderSVGBubble(vfxCtx, p.size);
@@ -509,12 +572,11 @@
             else if (p.type === 'sparkle') {
                 vfxCtx.fillStyle = p.color;
                 vfxCtx.shadowColor = p.color;
-                vfxCtx.shadowBlur = 25;
+                vfxCtx.shadowBlur = 20;
                 renderSVGSparkle(vfxCtx, p.size * 1.5);
-                vfxCtx.fill();
             } 
             else if (p.type === 'butterfly') {
-                renderSVGButterfly(vfxCtx, p.size, p.timeOffset);
+                renderRealisticButterfly(vfxCtx, p.size, p.timeOffset, p.color);
             }
 
             vfxCtx.restore();
