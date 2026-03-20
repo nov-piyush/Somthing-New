@@ -1,10 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultra Premium Hand</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
 
@@ -15,7 +12,6 @@ padding:0;
 overflow:hidden;
 background:#000;
 }
-
 canvas{
 position:fixed;
 top:0;
@@ -23,33 +19,31 @@ left:0;
 width:100%;
 height:100%;
 }
-
-#start{
+#btn{
 position:fixed;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-padding:14px 28px;
+padding:15px 25px;
 background:#000;
-border:1px solid #fff;
 color:#fff;
-border-radius:30px;
-font-size:16px;
+border:1px solid #fff;
+border-radius:25px;
 }
 </style>
 </head>
 
 <body>
 
-<button id="start">START</button>
+<button id="btn">START</button>
 <video id="video" style="display:none"></video>
 <canvas id="canvas"></canvas>
 
 <script>
-const btn=document.getElementById("start");
 const video=document.getElementById("video");
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
+const btn=document.getElementById("btn");
 
 let w,h;
 function resize(){
@@ -59,42 +53,37 @@ h=canvas.height=innerHeight;
 resize();
 onresize=resize;
 
-let hand=null,smooth=null;
-let drawPoints=[];
+let hand=null;
+let smooth=null;
+let trail=[];
 let particles=[];
 let wasPinch=false;
 
-const HAND_CONNECTIONS=[
-[0,1],[1,2],[2,3],[3,4],
-[0,5],[5,6],[6,7],[7,8],
-[5,9],[9,10],[10,11],[11,12],
-[9,13],[13,14],[14,15],[15,16],
-[13,17],[17,18],[18,19],[19,20],
-[0,17]
-];
-
 function hue(){
-return (performance.now()/10)%360;
+return (Date.now()/10)%360;
 }
 
+// HAND
 const hands=new Hands({
 locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
 });
 
 hands.setOptions({
 maxNumHands:1,
-modelComplexity:1,
-minDetectionConfidence:0.7,
-minTrackingConfidence:0.7
+modelComplexity:0,
+minDetectionConfidence:0.6,
+minTrackingConfidence:0.6
 });
 
 hands.onResults(r=>{
 hand=r.multiHandLandmarks?r.multiHandLandmarks[0]:null;
 });
 
+// CAMERA
 const camera=new Camera(video,{
 onFrame: async()=>{await hands.send({image:video});},
-width:640,height:480
+width:480,
+height:360
 });
 
 btn.onclick=()=>{
@@ -103,6 +92,7 @@ document.documentElement.requestFullscreen().catch(()=>{});
 camera.start();
 };
 
+// SMOOTH
 function lerp(a,b,t){return a+(b-a)*t;}
 
 function smoothHand(){
@@ -111,71 +101,47 @@ if(!smooth){
 smooth=JSON.parse(JSON.stringify(hand));
 }else{
 for(let i=0;i<21;i++){
-smooth[i].x=lerp(smooth[i].x,hand[i].x,0.35);
-smooth[i].y=lerp(smooth[i].y,hand[i].y,0.35);
+smooth[i].x=lerp(smooth[i].x,hand[i].x,0.5);
+smooth[i].y=lerp(smooth[i].y,hand[i].y,0.5);
 }
 }
 }
 
-function drawHand(p){
-ctx.beginPath();
-HAND_CONNECTIONS.forEach(([a,b])=>{
-let p1=p[a],p2=p[b];
-ctx.moveTo(w-p1.x*w,p1.y*h);
-ctx.lineTo(w-p2.x*w,p2.y*h);
-});
-ctx.strokeStyle=`hsl(${hue()},100%,60%)`;
-ctx.lineWidth=2;
-ctx.shadowColor=`hsl(${hue()},100%,60%)`;
-ctx.shadowBlur=10;
-ctx.stroke();
-}
-
-function drawPointsGlow(p){
-p.forEach((pt,i)=>{
-let x=w-pt.x*w;
-let y=pt.y*h;
+// DRAW LINE
+function drawTrail(){
+if(trail.length<2)return;
 
 ctx.beginPath();
-ctx.arc(x,y,i===8?6:3,0,Math.PI*2);
-ctx.fillStyle=`hsl(${hue()},100%,70%)`;
-ctx.shadowColor=`hsl(${hue()},100%,70%)`;
-ctx.shadowBlur=15;
-ctx.fill();
-});
-}
-
-function drawLine(){
-if(drawPoints.length<2)return;
-
-ctx.beginPath();
-drawPoints.forEach((p,i)=>{
-if(i===0) ctx.moveTo(p.x,p.y);
+trail.forEach((p,i)=>{
+if(i==0) ctx.moveTo(p.x,p.y);
 else ctx.lineTo(p.x,p.y);
 });
 
-ctx.strokeStyle=`hsl(${hue()},100%,60%)`;
+let c=`hsl(${hue()},100%,60%)`;
+
+ctx.strokeStyle=c;
 ctx.lineWidth=4;
-ctx.shadowColor=`hsl(${hue()},100%,60%)`;
-ctx.shadowBlur=20;
+ctx.shadowColor=c;
+ctx.shadowBlur=15;
 ctx.stroke();
 }
 
+// PARTICLES
 function pinch(p){
 let t=p[4],i=p[8];
 let dx=(t.x-i.x)*w;
 let dy=(t.y-i.y)*h;
 let d=Math.hypot(dx,dy);
 
-let pin=d<35;
+let pin=d<30;
 
 if(pin && !wasPinch){
-for(let k=0;k<30;k++){
+for(let k=0;k<20;k++){
 particles.push({
 x:w-i.x*w,
 y:i.y*h,
-vx:(Math.random()-0.5)*10,
-vy:(Math.random()-0.5)*10,
+vx:(Math.random()-0.5)*6,
+vy:(Math.random()-0.5)*6,
 life:1
 });
 }
@@ -187,7 +153,7 @@ function drawParticles(){
 particles.forEach((p,i)=>{
 p.x+=p.vx;
 p.y+=p.vy;
-p.life-=0.03;
+p.life-=0.04;
 
 ctx.beginPath();
 ctx.arc(p.x,p.y,3,0,Math.PI*2);
@@ -200,22 +166,21 @@ if(p.life<=0) particles.splice(i,1);
 ctx.globalAlpha=1;
 }
 
+// LOOP
 function animate(){
-ctx.fillStyle="rgba(0,0,0,0.15)";
+ctx.fillStyle="rgba(0,0,0,0.2)";
 ctx.fillRect(0,0,w,h);
 
 if(hand){
 smoothHand();
 
-let x=w-smooth[8].x*w;
+let x=w-smooth[8].x*w; // FIX MIRROR
 let y=smooth[8].y*h;
 
-drawPoints.push({x,y});
-if(drawPoints.length>300) drawPoints.shift();
+trail.push({x,y});
+if(trail.length>200) trail.shift();
 
-drawHand(smooth);
-drawPointsGlow(smooth);
-drawLine();
+drawTrail();
 pinch(smooth);
 }
 
