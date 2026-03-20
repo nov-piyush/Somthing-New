@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advanced Hand Tracking - Premium UI</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1a1a2e, #000000);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            touch-action: none;
+        }
+
+        #input_video {
+            display: none;
+        }
+
+        #output_canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            transform: scaleX(-1); /* Mirror the canvas horizontally */
+            pointer-events: none;
+        }
+
+        #ui_layer {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #instruction {
+            color: rgba(0, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .fallback {
+            color: #ff4d4d !important;
+            text-shadow: 0 0 15px rgba(255, 77, 77, 0.6) !important;
+            border-color: rgba(255, 77, 77, 0.3) !important;
+        }
+
+        #loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 255, 255, 0.1);
+            border-top: 3px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <video id="input_video" autoplay playsinline></video>
+    <canvas id="output_canvas"></canvas>
+
+    <div id="ui_layer">
+        <div id="instruction">INITIALIZING AI...</div>
+        <div id="loader"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoElement = document.getElementById('input_video');
+            const canvasElement = document.getElementById('output_canvas');
+            const ctx = canvasElement.getContext('2d');
+            const instructionEl = document.getElementById('instruction');
+            const loaderEl = document.getElementById('loader');
+
+            let width, height;
+            let currentLandmarks = null;
+            let smoothedLandmarks = null;
+            let history = [];
+            let particles =[];
+            let wasPinched = false;
+
+            const HAND_CONNECTIONS = [
+                [0, 1], [1, 2], [2, 3], [3, 4],       // Thumb[0, 5], [5, 6], [6, 7], [7, 8],       // Index
+                [5, 9], [9, 10], [10, 11],[11, 12],  // Middle
+                [9, 13],[13, 14], [14, 15], [15, 16], // Ring[13, 17], [17, 18], [18, 19],[19, 20],// Pinky
+                [0, 17]                               // Wrist to Pinky base
+            ];
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvasElement.width = width;
+                canvasElement.height = height;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Initialize MediaPipe Hands
+            const hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7
+            });
+
+            hands.onResults((results) => {
+                if (loaderEl.style.display !== 'none') {
+                    loaderEl.style.display = 'none';
+                    instructionEl.innerText = "ALLOW CAMERA & MOVE YOUR HAND";
+                }
+                
+                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                    currentLandmarks = results.multiHandLandmarks[0];
+                } else {
+                    currentLandmarks = null;
+                }
+            });
+
+            // Setup Camera
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await hands.send({ image: videoElement });
+                },
+                width: 640,
+                height: 480
+            });
+
+            camera.start().catch(err => {
+                loaderEl.style.display = 'none';
+                instructionEl.innerText = "CAMERA ACCESS DENIED OR UNSUPPORTED";
+                instructionEl.classList.add('fallback');
+            });
+
+            // Smooth Interpolation (LERP)
+            function lerp(start, end, amt) {
+                return (1 - amt) * start + amt * end;
+            }
+
+            // Draw Skeleton
+            function drawHand(landmarks, alpha, isMain) {
+                ctx.save();
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                // Neon Lines
+                ctx.beginPath();
+                HAND_CONNECTIONS.forEach(([i, j]) => {
+                    const p1 = landmarks[i];
+                    const p2 = landmarks[j];
+                    ctx.moveTo(p1.x * width, p1.y * height);
+                    ctx.lineTo(p2.x * width, p2.y * height);
+                });
+                ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.7})`;
+                ctx.lineWidth = isMain ? 3 : 1.5;
+                if (isMain) {
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 10;
+                }
+                ctx.stroke();
+
+                // Glowing Points
+                if (isMain) {
+                    landmarks.forEach((p, index) => {
+                        ctx.beginPath();
+                        const isTip = [4, 8, 12, 16, 20].includes(index);
+                        const radius = index === 8 ? 6 : (isTip ? 4 : 2);
+                        ctx.arc(p.x * width, p.y * height, radius, 0, 2 * Math.PI);
+                        ctx.fillStyle = index === 8 ? '#ffffff' : '#aaffff';
+                        ctx.shadowColor = '#00ffff';
+                        ctx.shadowBlur = isTip ? 15 : 5;
+                        ctx.fill();
+                    });
+                }
+                ctx.restore();
+            }
+
+            // Pinch and Hover Interactions
+            function handleInteraction(landmarks) {
+                const thumb = landmarks[4];
+                const index = landmarks[8];
+                const tx = thumb.x * width;
+                const ty = thumb.y * height;
+                const ix = index.x * width;
+                const iy = index.y * height;
+
+                const dist = Math.hypot(tx - ix, ty - iy);
+                const isPinchedNow = dist < 45;
+
+                // Index Finger Hover Effect
+                if (!isPinchedNow) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(ix, iy, 18, 0, 2 * Math.PI);
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 10;
+                    ctx.stroke();
+                    
+                    // Inner dot
+                    ctx.beginPath();
+                    ctx.arc(ix, iy, 3, 0, 2 * Math.PI);
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+                    ctx.fill();
+                    ctx.restore();
+                } else {
+                    // Active Pinch Indicator
+                    const midX = (tx + ix) / 2;
+                    const midY = (ty + iy) / 2;
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(midX, midY, 12, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 25;
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Trigger Click Effect
+                if (isPinchedNow && !wasPinched) {
+                    triggerClickParticle((tx + ix) / 2, (ty + iy) / 2);
+                    instructionEl.innerText = "PINCH DETECTED!";
+                    instructionEl.style.color = "#ffffff";
+                    instructionEl.style.textShadow = "0 0 20px #00ffff";
+                    
+                    setTimeout(() => {
+                        instructionEl.innerText = "ALLOW CAMERA & MOVE YOUR HAND";
+                        instructionEl.style.color = "rgba(0, 255, 255, 0.9)";
+                        instructionEl.style.textShadow = "0 0 15px rgba(0, 255, 255, 0.6)";
+                    }, 600);
+                }
+                wasPinched = isPinchedNow;
+            }
+
+            function triggerClickParticle(x, y) {
+                for(let i=0; i<20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 5 + 2;
+                    particles.push({
+                        x: x, y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0
+                    });
+                }
+            }
+
+            function drawParticles() {
+                for(let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life -= 0.03;
+                    
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.life * 4, 0, 2 * Math.PI);
+                    ctx.fillStyle = `rgba(0, 255, 255, ${p.life})`;
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            // Main Animation Loop
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+
+                if (currentLandmarks) {
+                    // Smooth tracking
+                    if (!smoothedLandmarks) {
+                        smoothedLandmarks = JSON.parse(JSON.stringify(currentLandmarks));
+                    } else {
+                        for(let i=0; i<21; i++) {
+                            smoothedLandmarks[i].x = lerp(smoothedLandmarks[i].x, currentLandmarks[i].x, 0.4);
+                            smoothedLandmarks[i].y = lerp(smoothedLandmarks[i].y, currentLandmarks[i].y, 0.4);
+                        }
+                    }
+
+                    // Update History for Trailing Effect
+                    history.push(JSON.parse(JSON.stringify(smoothedLandmarks)));
+                    if (history.length > 7) history.shift();
+
+                    // Draw Trails
+                    history.forEach((hist, idx) => {
+                        const alpha = (idx + 1) / history.length;
+                        if (idx === history.length - 1) {
+                            drawHand(hist, 1.0, true);
+                        } else {
+                            drawHand(hist, alpha * 0.4, false);
+                        }
+                    });
+
+                    handleInteraction(smoothedLandmarks);
+
+                } else {
+                    // Fade out trails when hand leaves
+                    if (history.length > 0) {
+                        history.shift();
+                        history.forEach((hist, idx) => {
+                            const alpha = (idx + 1) / history.length;
+                            drawHand(hist, alpha * 0.3, false);
+                        });
+                    } else {
+                        smoothedLandmarks = null;
+                        wasPinched = false;
+                    }
+                }
+
+                drawParticles();
+                requestAnimationFrame(animate);
+            }
+
+            // Start loop
+            animate();
+        });
+    </script>
+</body>
+</html>
