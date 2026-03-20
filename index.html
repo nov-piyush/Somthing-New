@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anvi's Spatial Magic</title>
+    <title>Anvisha's Spatial Magic</title>
     <!-- MediaPipe Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -24,7 +24,7 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #020504; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            padding: 15px; overflow: hidden; /* Prevent body scroll */
+            padding: 15px; overflow: hidden;
         }
 
         .ambient-orb {
@@ -36,24 +36,22 @@
 
         @keyframes float { 0% { transform: translateY(0px); } 100% { transform: translateY(30px); } }
 
-        /* Fixed UI Card for Mobile (No cut-off) */
         .glass-card {
-            background: rgba(15, 20, 25, 0.4);
+            background: rgba(15, 20, 25, 0.45);
             backdrop-filter: blur(40px) saturate(200%);
             -webkit-backdrop-filter: blur(40px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 28px; 
             padding: 25px 20px;
             width: 100%; max-width: 460px;
-            max-height: 90vh; /* Prevents going off screen */
-            overflow-y: auto; /* Allows smooth scroll inside card if screen is very small */
-            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.3);
             color: #fff; text-align: left;
-            -ms-overflow-style: none; scrollbar-width: none; /* Hide scrollbar for premium look */
+            -ms-overflow-style: none; scrollbar-width: none;
         }
         .glass-card::-webkit-scrollbar { display: none; }
 
-        /* Premium Heading Formatting */
         h1 {
             font-size: 1.85rem; font-weight: 800; text-align: center;
             background: linear-gradient(135deg, #ffffff 0%, #ff00ea 45%, #00f3ff 100%);
@@ -62,36 +60,37 @@
         }
 
         .subtitle { 
-            font-size: 0.85rem; color: rgba(255,255,255,0.85); 
+            font-size: 0.85rem; color: rgba(255,255,255,0.9); 
             text-align: center; margin-bottom: 22px; font-weight: 500; line-height: 1.4;
         }
 
         .feature-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
-        .feature { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.035); padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); }
-        .feature-icon { width: 38px; height: 38px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.1); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .feature-icon svg { width: 18px; height: 18px; fill: #fff; }
-        .feature-text h3 { font-size: 0.85rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
-        .feature-text p { font-size: 0.75rem; color: rgba(255,255,255,0.65); line-height: 1.3; }
+        .feature { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); transition: transform 0.2s; }
+        .feature:hover { transform: scale(1.02); background: rgba(255,255,255,0.08); }
+        
+        .feature-icon { width: 40px; height: 40px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.15); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .feature-icon svg { width: 20px; height: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+        
+        .feature-text h3 { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
+        .feature-text p { font-size: 0.75rem; color: rgba(255,255,255,0.7); line-height: 1.3; }
 
-        /* FIXED START BUTTON */
         .start-btn {
             background: linear-gradient(135deg, #ffffff, #e0e0e0);
-            color: #000; border: none; padding: 14px 0; width: 100%;
-            font-size: 1rem; font-weight: 800; border-radius: 20px;
+            color: #000; border: none; padding: 15px 0; width: 100%;
+            font-size: 1.05rem; font-weight: 800; border-radius: 20px;
             cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
             outline: none; -webkit-tap-highlight-color: transparent;
         }
-        .start-btn:active { transform: scale(0.96); box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15); }
+        .start-btn:active { transform: scale(0.95); box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2); }
 
-        #loading { display: none; text-align: center; font-size: 0.85rem; color: #00f3ff; margin-top: 15px; font-weight: 600; animation: pulse 1s infinite alternate; }
+        #loading { display: none; text-align: center; font-size: 0.9rem; color: #00f3ff; margin-top: 15px; font-weight: 600; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
 
-        /* App Canvases */
         #app-container { display: none; position: relative; width: 100%; height: 100%; }
         video { display: none; }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #bg-canvas { z-index: 1; filter: brightness(0.6) contrast(1.1); }
+        #bg-canvas { z-index: 1; filter: brightness(0.55) contrast(1.1); }
         #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
     </style>
 </head>
@@ -102,31 +101,40 @@
         <div class="ambient-orb orb-2"></div>
         
         <div class="glass-card">
-            <h1>Specially Made For Anvi ✨</h1>
+            <h1>Specially Made For Anvisha ✨</h1>
             <div class="subtitle">An exclusive magical experience, crafted just for you.<br>Let your hands create the universe!</div>
             
             <div class="feature-list">
                 <div class="feature">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C10.9 2 10 2.9 10 4V13.5L7.3 10.8C6.9 10.4 6.3 10.4 5.9 10.8C5.5 11.2 5.5 11.8 5.9 12.2L11 17.3C11.3 17.6 11.6 17.8 12 17.8H17C18.1 17.8 19 16.9 19 15.8V8C19 6.9 18.1 6 17 6H14V4C14 2.9 13.1 2 12 2Z"/></svg>
+                        <svg viewBox="0 0 24 24"><path fill="#ff4b82" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </div>
                     <div class="feature-text">
-                        <h3>1 Finger (Beating Hearts)</h3>
-                        <p>Move your index finger to unleash massive, vibrant beating hearts.</p>
+                        <h3>1 Finger (Beautiful Hearts)</h3>
+                        <p>Move your finger to unleash massive, vibrant beating hearts.</p>
                     </div>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path d="M16 4H14V13.5L11.3 10.8C10.9 10.4 10.3 10.4 9.9 10.8C9.5 11.2 9.5 11.8 9.9 12.2L15 17.3C15.3 17.6 15.6 17.8 16 17.8H21C22.1 17.8 23 16.9 23 15.8V10C23 8.9 22.1 8 21 8H18V4C18 2.9 17.1 2 16 2C14.9 2 14 2.9 14 4V8H16V4Z"/></svg>
+                        <svg viewBox="0 0 24 24"><path fill="#00f3ff" d="M14.59 2.18l-2.02 5.66-2.02-5.66A2 2 0 0 0 8.66 1L2.5 3.19a2 2 0 0 0-1.29 2.45l2.03 5.71a10.82 10.82 0 0 0 6.64 6.72l2.12.75 2.12-.75a10.82 10.82 0 0 0 6.64-6.72l2.03-5.71a2 2 0 0 0-1.29-2.45L15.34 1a2 2 0 0 0-1.89 1.18z"/></svg>
                     </div>
                     <div class="feature-text">
-                        <h3>2 & 3 Fingers (Butterflies & Gold)</h3>
-                        <p>2 Fingers: Flapping colorful butterflies. 3 Fingers: Pure Golden Sparkles.</p>
+                        <h3>2 Fingers (Magic Butterflies)</h3>
+                        <p>Show 2 fingers to release a flock of colorful flapping butterflies.</p>
                     </div>
                 </div>
                 <div class="feature">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg>
+                        <svg viewBox="0 0 24 24"><path fill="#ffb800" d="M12 2.5a4.5 4.5 0 0 0-4.5 4.5c0 1.63.88 3.07 2.19 3.88-.36.42-.78.78-1.25 1.07A4.47 4.47 0 0 0 5 10a4.5 4.5 0 0 0-4.5 4.5c0 1.83 1.1 3.42 2.68 4.12a5.52 5.52 0 0 0 1.04 3.73A4.5 4.5 0 0 0 8.5 24c1.63 0 3.07-.88 3.88-2.19.42.36.78.78 1.07 1.25A4.47 4.47 0 0 0 16 25a4.5 4.5 0 0 0 4.5-4.5c0-1.83-1.1-3.42-2.68-4.12a5.52 5.52 0 0 0-1.04-3.73A4.5 4.5 0 0 0 12 2.5z"/></svg>
+                    </div>
+                    <div class="feature-text">
+                        <h3>3 Fingers (Glowing Flowers)</h3>
+                        <p>Emit magical spinning rainbow flowers from your fingertips.</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z"/></svg>
                     </div>
                     <div class="feature-text">
                         <h3>4 Fingers (Rang Birangi Chamak)</h3>
@@ -135,11 +143,11 @@
                 </div>
                 <div class="feature">
                     <div class="feature-icon">
-                        <svg viewBox="0 0 24 24"><path d="M21 9C21 7.9 20.1 7 19 7H18V5C18 3.9 17.1 3 16 3C14.9 3 14 3.9 14 5V6H13V3C13 1.9 12.1 1 11 1C9.9 1 9 1.9 9 3V7H8V5C8 3.9 7.1 3 6 3C4.9 3 4 3.9 4 5V14C4 17.3 6.7 20 10 20H16C19.3 20 22 17.3 22 14V10C22 9.4 21.6 9 21 9Z"/></svg>
+                        <svg viewBox="0 0 24 24"><path fill="#ffea00" d="M21 9C21 7.9 20.1 7 19 7H18V5C18 3.9 17.1 3 16 3C14.9 3 14 3.9 14 5V6H13V3C13 1.9 12.1 1 11 1C9.9 1 9 1.9 9 3V7H8V5C8 3.9 7.1 3 6 3C4.9 3 4 3.9 4 5V14C4 17.3 6.7 20 10 20H16C19.3 20 22 17.3 22 14V10C22 9.4 21.6 9 21 9Z"/></svg>
                     </div>
                     <div class="feature-text">
-                        <h3>5 Fingers (The "Anvi" Spell)</h3>
-                        <p>Open whole palm to summon a Giant Glowing Heart inscribed with your name!</p>
+                        <h3>5 Fingers (The "Anvisha" Spell)</h3>
+                        <p>Open whole palm to summon a Giant Glowing Heart with your name!</p>
                     </div>
                 </div>
             </div>
@@ -165,12 +173,13 @@
 
     let width, height, cameraParams = {};
     let particles =[];
-    const MAX_PARTICLES = 300; 
+    const MAX_PARTICLES = 400; 
     
     let lastHandCenter = null;
     let anviHeartState = { active: false, x: 0, y: 0, scale: 0 };
     
-    const colorsList =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ff3366', '#a200ff', '#ffffff'];
+    // Premium Vibrant Colors
+    const colorsList =['#00f3ff', '#ff00ea', '#ffb800', '#00ff66', '#ff3366', '#a200ff', '#ffffff', '#ff88ff'];
 
     function resize() {
         width = window.innerWidth;
@@ -181,34 +190,68 @@
     window.addEventListener('resize', resize);
     resize();
 
-    const cache = { sparkles: {} };
+    const cache = { sparkles: {}, flowers: {} };
 
     function createParticleCache() {
+        // 1. Sparkles
         colorsList.forEach(color => {
             const cSparkle = document.createElement('canvas'); 
             cSparkle.width = 40; cSparkle.height = 40;
             const ctxS = cSparkle.getContext('2d');
             ctxS.fillStyle = color; 
-            ctxS.shadowBlur = 12; 
-            ctxS.shadowColor = color;
-            ctxS.beginPath(); 
-            ctxS.moveTo(20, 0); 
-            ctxS.quadraticCurveTo(20, 20, 40, 20);
-            ctxS.quadraticCurveTo(20, 20, 20, 40); 
-            ctxS.quadraticCurveTo(20, 20, 0, 20);
-            ctxS.quadraticCurveTo(20, 20, 20, 0); 
+            ctxS.shadowBlur = 12; ctxS.shadowColor = color;
+            ctxS.beginPath(); ctxS.moveTo(20, 0); 
+            ctxS.quadraticCurveTo(20, 20, 40, 20); ctxS.quadraticCurveTo(20, 20, 20, 40); 
+            ctxS.quadraticCurveTo(20, 20, 0, 20); ctxS.quadraticCurveTo(20, 20, 20, 0); 
             ctxS.fill();
             cache.sparkles[color] = cSparkle;
         });
 
-        const cHeart = document.createElement('canvas'); cHeart.width = 80; cHeart.height = 80;
+        // 2. Glowing Flowers
+        colorsList.forEach(color => {
+            const cFlow = document.createElement('canvas'); 
+            cFlow.width = 60; cFlow.height = 60;
+            const ctxF = cFlow.getContext('2d');
+            ctxF.translate(30, 30);
+            ctxF.shadowBlur = 12; ctxF.shadowColor = color;
+            for(let i=0; i<5; i++) {
+                ctxF.beginPath();
+                ctxF.ellipse(0, -12, 6, 14, 0, 0, Math.PI*2);
+                ctxF.fillStyle = color;
+                ctxF.fill();
+                ctxF.rotate((Math.PI*2)/5);
+            }
+            ctxF.beginPath(); ctxF.arc(0,0, 5, 0, Math.PI*2); ctxF.fillStyle = '#fff'; ctxF.fill();
+            cache.flowers[color] = cFlow;
+        });
+
+        // 3. Proper Solid Glowing Heart
+        const cHeart = document.createElement('canvas'); 
+        cHeart.width = 140; cHeart.height = 140;
         const ctxH = cHeart.getContext('2d');
-        ctxH.fillStyle = '#ff0055'; ctxH.shadowBlur = 15; ctxH.shadowColor = '#ff00ea';
-        ctxH.beginPath(); ctxH.moveTo(40, 25);
-        ctxH.bezierCurveTo(40, 10, 20, 10, 20, 25); ctxH.bezierCurveTo(20, 45, 40, 60, 40, 70);
-        ctxH.bezierCurveTo(40, 60, 60, 45, 60, 25); ctxH.bezierCurveTo(60, 10, 40, 10, 40, 25); ctxH.fill();
-        ctxH.fillStyle = 'rgba(255,255,255,0.6)'; 
-        ctxH.beginPath(); ctxH.ellipse(30, 22, 5, 10, -Math.PI/4, 0, Math.PI*2); ctxH.fill();
+        ctxH.translate(70, 60); 
+        
+        ctxH.beginPath();
+        ctxH.moveTo(0, -15);
+        ctxH.bezierCurveTo(-35, -55, -75, -5, 0, 55);
+        ctxH.bezierCurveTo(75, -5, 35, -55, 0, -15);
+        ctxH.closePath();
+
+        let gradH = ctxH.createRadialGradient(0, -10, 5, 0, 0, 60);
+        gradH.addColorStop(0, '#ff4b82');
+        gradH.addColorStop(1, '#c20032');
+        ctxH.fillStyle = gradH; 
+        ctxH.shadowBlur = 25; 
+        ctxH.shadowColor = '#ff0055';
+        ctxH.fill();
+
+        // 3D Glassy Highlight for a premium feel
+        ctxH.beginPath();
+        ctxH.moveTo(-18, -25);
+        ctxH.bezierCurveTo(-30, -45, -5, -45, 0, -32);
+        ctxH.bezierCurveTo(-5, -32, -12, -25, -18, -25);
+        ctxH.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctxH.fill();
         cache.heart = cHeart;
     }
     createParticleCache();
@@ -269,60 +312,66 @@
         let distThumbBase = Math.hypot(landmarks[3].x - landmarks[17].x, landmarks[3].y - landmarks[17].y);
         let thumbUp = distThumb > distThumbBase;
 
-        let fingersCount =[thumbUp, indexUp, middleUp, ringUp, pinkyUp].filter(Boolean).length;
+        // Collect all active fingers to fix the bug where particles only emit from one finger
+        let activeTips =[];
+        if (thumbUp) activeTips.push(mapCoords(landmarks[4]));
+        if (indexUp) activeTips.push(mapCoords(landmarks[8]));
+        if (middleUp) activeTips.push(mapCoords(landmarks[12]));
+        if (ringUp) activeTips.push(mapCoords(landmarks[16]));
+        if (pinkyUp) activeTips.push(mapCoords(landmarks[20]));
+
+        let fingersCount = activeTips.length;
 
         let center = mapCoords(landmarks[9]); 
         let speed = 0;
         if (lastHandCenter) speed = Math.hypot(center.x - lastHandCenter.x, center.y - lastHandCenter.y);
         lastHandCenter = center;
 
-        let emitPos = mapCoords(landmarks[8]); 
-
+        // 5 Fingers - Anvisha Spell
         if (fingersCount === 5) {
             let palmWrist = mapCoords(landmarks[0]);
             let targetX = (center.x + palmWrist.x) / 2;
-            let targetY = (center.y + palmWrist.y) / 2 - 30;
+            let targetY = (center.y + palmWrist.y) / 2 - 40;
 
             anviHeartState.active = true;
             anviHeartState.x = anviHeartState.x ? lerp(anviHeartState.x, targetX, 0.3) : targetX;
             anviHeartState.y = anviHeartState.y ? lerp(anviHeartState.y, targetY, 0.3) : targetY;
-            anviHeartState.scale = lerp(anviHeartState.scale, 1, 0.2); 
+            anviHeartState.scale = lerp(anviHeartState.scale, 1.2, 0.15); 
         } else {
             anviHeartState.active = false;
-            anviHeartState.scale = 0;
+            anviHeartState.scale = lerp(anviHeartState.scale, 0, 0.2);
         }
 
         if (fingersCount > 0 && fingersCount < 5) {
-            let numSpawns = speed > 2 ? 4 : 2; 
-            for(let i=0; i < numSpawns; i++) {
-                let jitterX = emitPos.x + (Math.random() * 40 - 20);
-                let jitterY = emitPos.y + (Math.random() * 40 - 20);
+            let numSpawns = speed > 2 ? 3 : 1; 
+            
+            // Loop through all active fingers and emit particles from each
+            activeTips.forEach(pos => {
+                for(let i=0; i < numSpawns; i++) {
+                    let jitterX = pos.x + (Math.random() * 30 - 15);
+                    let jitterY = pos.y + (Math.random() * 30 - 15);
 
-                if (fingersCount === 1 && indexUp && !middleUp && !ringUp && !pinkyUp) {
-                    spawnParticle(jitterX, jitterY, 'big_heart');
+                    if (fingersCount === 1) spawnParticle(jitterX, jitterY, 'big_heart');
+                    else if (fingersCount === 2) spawnParticle(jitterX, jitterY, 'butterfly');
+                    else if (fingersCount === 3) spawnParticle(jitterX, jitterY, 'flower');
+                    else if (fingersCount === 4) spawnParticle(jitterX, jitterY, 'sparkle'); 
                 }
-                else if (fingersCount === 2 && indexUp && middleUp && !ringUp && !pinkyUp) {
-                    spawnParticle(jitterX, jitterY, 'butterfly');
-                }
-                else if (fingersCount === 3 && indexUp && middleUp && ringUp && !pinkyUp) {
-                    spawnParticle(jitterX, jitterY, 'sparkle', '#ffb800');
-                }
-                else if (fingersCount === 4 && indexUp && middleUp && ringUp && pinkyUp) {
-                    spawnParticle(jitterX, jitterY, 'sparkle'); 
-                }
-            }
+            });
         }
     }
 
-    function spawnParticle(x, y, type, specificColor = null) {
+    function spawnParticle(x, y, type) {
         if (particles.length > MAX_PARTICLES) particles.shift(); 
-        let colorToUse = specificColor || colorsList[Math.floor(Math.random() * colorsList.length)];
+        
         particles.push({
             x: x, y: y,
             vx: (Math.random() - 0.5) * 8, 
             vy: (Math.random() - 0.5) * 8 - 2,
-            size: type === 'big_heart' ? Math.random() * 1.5 + 1 : Math.random() * 1.0 + 0.6,
-            life: 1.0, type: type, color: colorToUse, timeOffset: Math.random() * 1000
+            size: type === 'big_heart' ? Math.random() * 0.8 + 0.6 : Math.random() * 1.0 + 0.6,
+            life: 1.0, 
+            type: type, 
+            color: colorsList[Math.floor(Math.random() * colorsList.length)], 
+            timeOffset: Math.random() * 1000
         });
     }
 
@@ -338,24 +387,44 @@
         ctx.restore();
     }
 
+    // PREMIUM 5-FINGER SPELL
     function renderAnviHeart(x, y, scale) {
-        let pulse = 1 + Math.sin(Date.now() * 0.006) * 0.08; 
-        vfxCtx.save(); vfxCtx.translate(x, y); vfxCtx.scale(scale * pulse, scale * pulse);
+        let pulse = 1 + Math.sin(Date.now() * 0.005) * 0.06; 
+        vfxCtx.save(); 
+        vfxCtx.translate(x, y); 
+        vfxCtx.scale(scale * pulse, scale * pulse);
 
-        let grad = vfxCtx.createRadialGradient(0, 0, 10, 0, 0, 150);
-        grad.addColorStop(0, 'rgba(255, 0, 100, 0.4)');
+        // Huge Glowing Aura
+        let grad = vfxCtx.createRadialGradient(0, 0, 20, 0, 0, 220);
+        grad.addColorStop(0, 'rgba(255, 0, 120, 0.7)');
+        grad.addColorStop(0.5, 'rgba(255, 0, 120, 0.2)');
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        vfxCtx.fillStyle = grad; vfxCtx.fillRect(-150, -150, 300, 300);
+        vfxCtx.fillStyle = grad; 
+        vfxCtx.fillRect(-250, -250, 500, 500);
 
-        vfxCtx.translate(-80, -80); vfxCtx.drawImage(cache.heart, 0, 0, 160, 160); vfxCtx.translate(80, 80);
+        // Subtle Magic Circle Behind Heart
+        vfxCtx.save();
+        vfxCtx.rotate(Date.now() * 0.001);
+        vfxCtx.beginPath(); vfxCtx.arc(0, 0, 130, 0, Math.PI * 2);
+        vfxCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; vfxCtx.lineWidth = 2; vfxCtx.setLineDash([15, 20]); vfxCtx.stroke();
+        vfxCtx.restore();
 
+        // Massive Beautiful Solid Heart
+        vfxCtx.drawImage(cache.heart, -110, -100, 220, 220);
+
+        // "Anvisha" Text Exactly Inside the Heart
         vfxCtx.font = "bold 45px 'Dancing Script', cursive, sans-serif";
-        vfxCtx.textAlign = "center"; vfxCtx.textBaseline = "middle";
-        vfxCtx.shadowColor = "#ffffff"; vfxCtx.shadowBlur = 15; vfxCtx.fillStyle = "#ffffff";
-        vfxCtx.fillText("Anvi", 0, -15); vfxCtx.shadowBlur = 0; 
+        vfxCtx.textAlign = "center"; 
+        vfxCtx.textBaseline = "middle";
+        vfxCtx.shadowColor = "#ffffff"; 
+        vfxCtx.shadowBlur = 15; 
+        vfxCtx.fillStyle = "#ffffff";
+        vfxCtx.fillText("Anvisha", 0, -10); 
+        vfxCtx.shadowBlur = 0; 
 
-        vfxCtx.translate(-50, -40); vfxCtx.rotate(-0.3); drawRealisticButterfly(vfxCtx, '#00f3ff', 0);
-        vfxCtx.rotate(0.3); vfxCtx.translate(110, 60); vfxCtx.rotate(0.5); drawRealisticButterfly(vfxCtx, '#ffb800', 500);
+        // Magic Floating Butterflies around the heart
+        vfxCtx.translate(-100, -60); vfxCtx.rotate(-0.3); drawRealisticButterfly(vfxCtx, '#00f3ff', 0);
+        vfxCtx.rotate(0.3); vfxCtx.translate(200, 110); vfxCtx.rotate(0.5); drawRealisticButterfly(vfxCtx, '#ffb800', 500);
 
         vfxCtx.restore();
     }
@@ -363,7 +432,7 @@
     function renderVFX() {
         vfxCtx.clearRect(0, 0, width, height);
 
-        if (anviHeartState.active && anviHeartState.scale > 0.01) {
+        if (anviHeartState.scale > 0.01) {
             renderAnviHeart(anviHeartState.x, anviHeartState.y, anviHeartState.scale);
         }
 
@@ -373,17 +442,27 @@
 
             if (p.life <= 0) { particles.splice(i, 1); continue; }
 
-            vfxCtx.save(); vfxCtx.translate(p.x, p.y); vfxCtx.globalAlpha = p.life;
+            vfxCtx.save(); 
+            vfxCtx.translate(p.x, p.y); 
+            vfxCtx.globalAlpha = p.life;
 
             if (p.type === 'big_heart') {
                 let beatScale = p.size * (1 + Math.sin((Date.now() + p.timeOffset) * 0.01) * 0.2);
-                vfxCtx.scale(beatScale, beatScale); vfxCtx.drawImage(cache.heart, -40, -40);
+                vfxCtx.scale(beatScale, beatScale); 
+                vfxCtx.drawImage(cache.heart, -70, -60);
             } 
+            else if (p.type === 'flower') {
+                vfxCtx.scale(p.size * p.life, p.size * p.life);
+                vfxCtx.rotate(p.life * 3);
+                vfxCtx.drawImage(cache.flowers[p.color], -30, -30);
+            }
             else if (p.type === 'sparkle') {
-                vfxCtx.scale(p.size, p.size); vfxCtx.drawImage(cache.sparkles[p.color], -20, -20);
+                vfxCtx.scale(p.size * p.life, p.size * p.life); 
+                vfxCtx.drawImage(cache.sparkles[p.color], -20, -20);
             } 
             else if (p.type === 'butterfly') {
-                vfxCtx.scale(p.size, p.size); drawRealisticButterfly(vfxCtx, p.color, p.timeOffset);
+                vfxCtx.scale(p.size, p.size); 
+                drawRealisticButterfly(vfxCtx, p.color, p.timeOffset);
             }
             vfxCtx.restore();
         }
