@@ -1,196 +1,477 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Apple Glass VFX Tracking</title>
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* SF Pro Font & Apple System Defaults */
+        :root {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
-<style>
-html,body{
-margin:0;
-padding:0;
-overflow:hidden;
-background:#000;
-}
-canvas{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-}
-#btn{
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-padding:15px 25px;
-background:#000;
-color:#fff;
-border:1px solid #fff;
-border-radius:25px;
-}
-</style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 
+         * APPLE FOREST GLASS PRISM UI 
+         * Deep dark ambient background with subtle green/teal/magenta orbs 
+         */
+        #intro-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #050a08; /* Deep forest dark base */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        /* Prism Glowing Orbs in Background */
+        .prism-orb-1, .prism-orb-2 {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+        }
+        .prism-orb-1 {
+            top: 10%; left: -10%;
+            width: 300px; height: 300px;
+            background: #00ff88; /* Forest Neon Green */
+        }
+        .prism-orb-2 {
+            bottom: 10%; right: -10%;
+            width: 300px; height: 300px;
+            background: #ff007f; /* Love Theme Magenta */
+        }
+
+        /* Apple Frosted Glass Card */
+        .glass-card {
+            background: rgba(20, 30, 25, 0.3); /* Dark greenish glass */
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 30px 25px;
+            width: 100%;
+            max-width: 400px; /* Perfect for mobile */
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Heading Highlight */
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #a8ff78 50%, #78ffd6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 25px;
+            font-weight: 400;
+        }
+
+        .features {
+            text-align: left;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .feature-desc {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.4;
+        }
+
+        /* Apple Style Pill Button */
+        .start-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            border: none;
+            padding: 14px 0;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .start-btn:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        #loading-text {
+            display: none;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #00ff88;
+            letter-spacing: 0.5px;
+        }
+
+        /* Canvas App Container */
+        #app-container { display: none; position: relative; width: 100%; height: 100%; }
+        video { display: none; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        #bg-canvas { z-index: 1; }
+        #draw-canvas { z-index: 2; pointer-events: none; }
+        #vfx-canvas { z-index: 3; pointer-events: none; mix-blend-mode: screen; }
+
+        #flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 10; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+    </style>
 </head>
-
 <body>
 
-<button id="btn">START</button>
-<video id="video" style="display:none"></video>
-<canvas id="canvas"></canvas>
+    <!-- Apple Forest Glass Prism Intro -->
+    <div id="intro-screen">
+        <div class="prism-orb-1"></div>
+        <div class="prism-orb-2"></div>
+        
+        <div class="glass-card">
+            <h1>Spatial VFX Engine</h1>
+            <div class="subtitle">Next-generation hand tracking experience.</div>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <span class="feature-title">Draw</span>
+                    <span class="feature-desc">Raise one index finger to draw 3D lights.</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-title">Magnetic Beam</span>
+                    <span class="feature-desc">Bring both index fingers together and pull apart.</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-title">Erase</span>
+                    <span class="feature-desc">Open your full hand flat toward the camera.</span>
+                </div>
+            </div>
+
+            <button id="startBtn" class="start-btn" onclick="startApp()">Start Experience</button>
+            <div id="loading-text">Calibrating lenses...</div>
+        </div>
+    </div>
+
+    <!-- Main Engine UI -->
+    <div id="app-container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="bg-canvas"></canvas>
+        <canvas id="draw-canvas"></canvas>
+        <canvas id="vfx-canvas"></canvas>
+        <div id="flash"></div>
+    </div>
 
 <script>
-const video=document.getElementById("video");
-const canvas=document.getElementById("canvas");
-const ctx=canvas.getContext("2d");
-const btn=document.getElementById("btn");
+    const video = document.getElementById('video');
+    const bgCanvas = document.getElementById('bg-canvas');
+    const drawCanvas = document.getElementById('draw-canvas');
+    const vfxCanvas = document.getElementById('vfx-canvas');
+    
+    const bgCtx = bgCanvas.getContext('2d');
+    const drawCtx = drawCanvas.getContext('2d', { alpha: true });
+    const vfxCtx = vfxCanvas.getContext('2d', { alpha: true });
 
-let w,h;
-function resize(){
-w=canvas.width=innerWidth;
-h=canvas.height=innerHeight;
-}
-resize();
-onresize=resize;
+    let width, height;
+    let cameraParams = {};
+    let particles = [];
+    let prevHands =[];
+    let isTracking = false;
 
-let hand=null;
-let smooth=null;
-let trail=[];
-let particles=[];
-let wasPinch=false;
+    // Strict Mobile Viewport Sizing
+    function resizeCanvases() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        [bgCanvas, drawCanvas, vfxCanvas].forEach(c => {
+            c.width = width;
+            c.height = height;
+        });
+    }
+    window.addEventListener('resize', resizeCanvases);
+    resizeCanvases();
 
-function hue(){
-return (Date.now()/10)%360;
-}
+    async function startApp() {
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('loading-text').style.display = 'block';
 
-// HAND
-const hands=new Hands({
-locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
-});
+        // Auto Fullscreen on mobile
+        let elem = document.documentElement;
+        if (elem.requestFullscreen) elem.requestFullscreen().catch(e => console.log(e));
+        
+        initMediaPipe();
+    }
 
-hands.setOptions({
-maxNumHands:1,
-modelComplexity:0,
-minDetectionConfidence:0.6,
-minTrackingConfidence:0.6
-});
+    function initMediaPipe() {
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
 
-hands.onResults(r=>{
-hand=r.multiHandLandmarks?r.multiHandLandmarks[0]:null;
-});
+        hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
 
-// CAMERA
-const camera=new Camera(video,{
-onFrame: async()=>{await hands.send({image:video});},
-width:480,
-height:360
-});
+        hands.onResults(onResults);
 
-btn.onclick=()=>{
-btn.style.display="none";
-document.documentElement.requestFullscreen().catch(()=>{});
-camera.start();
-};
+        const camera = new Camera(video, {
+            onFrame: async () => {
+                await hands.send({ image: video });
+            },
+            width: 1280,
+            height: 720
+        });
 
-// SMOOTH
-function lerp(a,b,t){return a+(b-a)*t;}
+        camera.start().then(() => {
+            document.getElementById('intro-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            isTracking = true;
+            animateVFX();
+        });
+    }
 
-function smoothHand(){
-if(!hand)return;
-if(!smooth){
-smooth=JSON.parse(JSON.stringify(hand));
-}else{
-for(let i=0;i<21;i++){
-smooth[i].x=lerp(smooth[i].x,hand[i].x,0.5);
-smooth[i].y=lerp(smooth[i].y,hand[i].y,0.5);
-}
-}
-}
+    // Process Hand Tracking
+    function onResults(results) {
+        bgCtx.save();
+        bgCtx.scale(-1, 1);
+        bgCtx.translate(-width, 0);
 
-// DRAW LINE
-function drawTrail(){
-if(trail.length<2)return;
+        const scale = Math.max(width / results.image.width, height / results.image.height);
+        const w = results.image.width * scale;
+        const h = results.image.height * scale;
+        const x = (width - w) / 2;
+        const y = (height - h) / 2;
 
-ctx.beginPath();
-trail.forEach((p,i)=>{
-if(i==0) ctx.moveTo(p.x,p.y);
-else ctx.lineTo(p.x,p.y);
-});
+        cameraParams = { w, h, x, y };
+        bgCtx.drawImage(results.image, x, y, w, h);
+        bgCtx.restore();
 
-let c=`hsl(${hue()},100%,60%)`;
+        if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+            prevHands =[];
+            return;
+        }
 
-ctx.strokeStyle=c;
-ctx.lineWidth=4;
-ctx.shadowColor=c;
-ctx.shadowBlur=15;
-ctx.stroke();
-}
+        let currentHands = [];
+        let indexFingers =[];
 
-// PARTICLES
-function pinch(p){
-let t=p[4],i=p[8];
-let dx=(t.x-i.x)*w;
-let dy=(t.y-i.y)*h;
-let d=Math.hypot(dx,dy);
+        results.multiHandLandmarks.forEach((landmarks, index) => {
+            const isFingerUp = (tip, pip) => landmarks[tip].y < landmarks[pip].y;
+            
+            let indexUp = isFingerUp(8, 6);
+            let middleUp = isFingerUp(12, 10);
+            let ringUp = isFingerUp(16, 14);
+            let pinkyUp = isFingerUp(20, 18);
 
-let pin=d<30;
+            // Erase
+            if (indexUp && middleUp && ringUp && pinkyUp) {
+                eraseCanvas();
+                return;
+            }
 
-if(pin && !wasPinch){
-for(let k=0;k<20;k++){
-particles.push({
-x:w-i.x*w,
-y:i.y*h,
-vx:(Math.random()-0.5)*6,
-vy:(Math.random()-0.5)*6,
-life:1
-});
-}
-}
-wasPinch=pin;
-}
+            // Map Coordinates
+            let mappedX = width - (landmarks[8].x * cameraParams.w + cameraParams.x);
+            let mappedY = landmarks[8].y * cameraParams.h + cameraParams.y;
 
-function drawParticles(){
-particles.forEach((p,i)=>{
-p.x+=p.vx;
-p.y+=p.vy;
-p.life-=0.04;
+            if (indexUp && !middleUp) {
+                indexFingers.push({ x: mappedX, y: mappedY });
+                currentHands.push({ x: mappedX, y: mappedY });
 
-ctx.beginPath();
-ctx.arc(p.x,p.y,3,0,Math.PI*2);
-ctx.fillStyle=`hsl(${hue()},100%,60%)`;
-ctx.globalAlpha=p.life;
-ctx.fill();
+                let prev = prevHands[index];
+                if (prev) {
+                    let dist = Math.hypot(mappedX - prev.x, mappedY - prev.y);
+                    if (dist < 150) {
+                        drawLine(prev.x, prev.y, mappedX, mappedY);
+                        if (Math.random() > 0.4) spawn3DHeart(mappedX, mappedY, Math.random() * 15 + 10);
+                    }
+                }
+            }
+        });
 
-if(p.life<=0) particles.splice(i,1);
-});
-ctx.globalAlpha=1;
-}
+        // Magnetic Beam
+        if (indexFingers.length === 2) {
+            let p1 = indexFingers[0];
+            let p2 = indexFingers[1];
+            let dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            drawLoveBeam(p1, p2, dist);
+        }
 
-// LOOP
-function animate(){
-ctx.fillStyle="rgba(0,0,0,0.2)";
-ctx.fillRect(0,0,w,h);
+        prevHands = currentHands;
+    }
 
-if(hand){
-smoothHand();
+    function getDynamicColor() {
+        let time = Date.now();
+        return `hsl(${300 + (time / 15) % 80}, 100%, 60%)`; 
+    }
 
-let x=w-smooth[8].x*w; // FIX MIRROR
-let y=smooth[8].y*h;
+    function drawLine(x1, y1, x2, y2) {
+        let color = getDynamicColor();
+        drawCtx.beginPath();
+        drawCtx.moveTo(x1, y1);
+        drawCtx.lineTo(x2, y2);
+        drawCtx.strokeStyle = color;
+        drawCtx.lineWidth = 15;
+        drawCtx.lineCap = "round";
+        drawCtx.shadowColor = color;
+        drawCtx.shadowBlur = 30;
+        drawCtx.stroke();
+    }
 
-trail.push({x,y});
-if(trail.length>200) trail.shift();
+    function drawLoveBeam(p1, p2, dist) {
+        let color = getDynamicColor();
+        let midX = (p1.x + p2.x) / 2;
+        let midY = (p1.y + p2.y) / 2;
 
-drawTrail();
-pinch(smooth);
-}
+        drawCtx.beginPath();
+        drawCtx.moveTo(p1.x, p1.y);
+        drawCtx.quadraticCurveTo(midX, midY + (dist * 0.1), p2.x, p2.y); 
+        drawCtx.strokeStyle = 'white';
+        drawCtx.lineWidth = 4;
+        drawCtx.shadowColor = color;
+        drawCtx.shadowBlur = 40;
+        drawCtx.stroke();
 
-drawParticles();
+        drawCtx.beginPath();
+        drawCtx.moveTo(p1.x, p1.y);
+        drawCtx.quadraticCurveTo(midX, midY + (dist * 0.1), p2.x, p2.y); 
+        drawCtx.strokeStyle = color;
+        drawCtx.lineWidth = 12;
+        drawCtx.globalAlpha = 0.5;
+        drawCtx.stroke();
+        drawCtx.globalAlpha = 1.0;
 
-requestAnimationFrame(animate);
-}
+        let pulseTime = Date.now() / 150;
+        let pulseSize = 40 + Math.sin(pulseTime) * 15;
+        
+        if (dist > 100) {
+            spawn3DHeart(midX, midY + (dist * 0.1), pulseSize, true);
+            if(Math.random() > 0.5) {
+                spawn3DHeart(p1.x + (Math.random()*(p2.x-p1.x)), p1.y + (Math.random()*(p2.y-p1.y)), 10);
+            }
+        }
+    }
 
-animate();
+    function eraseCanvas() {
+        drawCtx.clearRect(0, 0, width, height);
+        particles =[];
+        let flash = document.getElementById('flash');
+        flash.style.opacity = '0.4';
+        setTimeout(() => flash.style.opacity = '0', 150);
+    }
+
+    function spawn3DHeart(x, y, size, isStatic = false) {
+        let time = Date.now();
+        let hue = 300 + ((time / 15) % 80);
+        
+        particles.push({
+            x: x, y: y,
+            vx: isStatic ? 0 : (Math.random() - 0.5) * 5,
+            vy: isStatic ? 0 : (Math.random() - 0.5) * 5 - 3,
+            life: isStatic ? 0.2 : 1.0,
+            size: size,
+            hue: hue
+        });
+    }
+
+    function render3DHeartPath(ctx, size) {
+        ctx.beginPath();
+        ctx.moveTo(0, size/4);
+        ctx.bezierCurveTo(-size/2, -size/2, -size, size/4, 0, size);
+        ctx.bezierCurveTo(size, size/4, size/2, -size/2, 0, size/4);
+        ctx.closePath();
+    }
+
+    function animateVFX() {
+        if (!isTracking) return;
+
+        drawCtx.globalCompositeOperation = 'destination-out';
+        drawCtx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+        drawCtx.fillRect(0, 0, width, height);
+        drawCtx.globalCompositeOperation = 'source-over';
+
+        vfxCtx.clearRect(0, 0, width, height);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.025;
+            p.size *= 0.98;
+
+            if (p.life <= 0 || p.size < 1) {
+                particles.splice(i, 1);
+            } else {
+                vfxCtx.save();
+                vfxCtx.translate(p.x, p.y);
+                vfxCtx.globalAlpha = p.life;
+                
+                let gradient = vfxCtx.createRadialGradient(-p.size/3, -p.size/3, p.size/10, 0, 0, p.size);
+                gradient.addColorStop(0, 'white');
+                gradient.addColorStop(0.3, `hsl(${p.hue}, 100%, 70%)`);
+                gradient.addColorStop(1, `hsl(${p.hue}, 100%, 40%)`);
+
+                vfxCtx.fillStyle = gradient;
+                vfxCtx.shadowColor = `hsl(${p.hue}, 100%, 50%)`;
+                vfxCtx.shadowBlur = 20;
+
+                render3DHeartPath(vfxCtx, p.size);
+                vfxCtx.fill();
+                vfxCtx.restore();
+            }
+        }
+
+        requestAnimationFrame(animateVFX);
+    }
 </script>
-
 </body>
 </html>
