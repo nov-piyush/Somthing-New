@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Hand Interactive</title>
+<title>Ultra Premium Hand</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
 
 <style>
-body,html{
+html,body{
 margin:0;
 padding:0;
 overflow:hidden;
 background:#000;
-font-family:sans-serif;
 }
 
 canvas{
@@ -25,55 +24,43 @@ width:100%;
 height:100%;
 }
 
-#ui{
+#start{
 position:fixed;
-top:20px;
-width:100%;
-text-align:center;
-color:#ff66aa;
-letter-spacing:2px;
-font-size:14px;
-}
-
-input{
-margin-top:10px;
-padding:8px 14px;
-border:none;
-border-radius:20px;
-outline:none;
-background:#111;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+padding:14px 28px;
+background:#000;
+border:1px solid #fff;
 color:#fff;
-text-align:center;
+border-radius:30px;
+font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui">
-<div>DRAW • PINCH • CREATE MAGIC</div>
-<input id="nameInput" placeholder="Enter Name">
-</div>
-
+<button id="start">START</button>
 <video id="video" style="display:none"></video>
 <canvas id="canvas"></canvas>
 
 <script>
+const btn=document.getElementById("start");
 const video=document.getElementById("video");
 const canvas=document.getElementById("canvas");
 const ctx=canvas.getContext("2d");
 
-let w=canvas.width=innerWidth;
-let h=canvas.height=innerHeight;
-
-window.onresize=()=>{
+let w,h;
+function resize(){
 w=canvas.width=innerWidth;
 h=canvas.height=innerHeight;
-};
+}
+resize();
+onresize=resize;
 
-let hand=null, smooth=null;
-let trail=[];
-let shapes=[];
+let hand=null,smooth=null;
+let drawPoints=[];
 let particles=[];
 let wasPinch=false;
 
@@ -86,6 +73,10 @@ const HAND_CONNECTIONS=[
 [0,17]
 ];
 
+function hue(){
+return (performance.now()/10)%360;
+}
+
 const hands=new Hands({
 locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
 });
@@ -97,18 +88,22 @@ minDetectionConfidence:0.7,
 minTrackingConfidence:0.7
 });
 
-hands.onResults(res=>{
-hand=res.multiHandLandmarks?res.multiHandLandmarks[0]:null;
-if(!hand){ smooth=null; }
+hands.onResults(r=>{
+hand=r.multiHandLandmarks?r.multiHandLandmarks[0]:null;
 });
 
 const camera=new Camera(video,{
-onFrame: async()=>{ await hands.send({image:video}); },
+onFrame: async()=>{await hands.send({image:video});},
 width:640,height:480
 });
-camera.start();
 
-function lerp(a,b,t){ return a+(b-a)*t; }
+btn.onclick=()=>{
+btn.style.display="none";
+document.documentElement.requestFullscreen().catch(()=>{});
+camera.start();
+};
+
+function lerp(a,b,t){return a+(b-a)*t;}
 
 function smoothHand(){
 if(!hand)return;
@@ -116,108 +111,71 @@ if(!smooth){
 smooth=JSON.parse(JSON.stringify(hand));
 }else{
 for(let i=0;i<21;i++){
-smooth[i].x=lerp(smooth[i].x,hand[i].x,0.4);
-smooth[i].y=lerp(smooth[i].y,hand[i].y,0.4);
+smooth[i].x=lerp(smooth[i].x,hand[i].x,0.35);
+smooth[i].y=lerp(smooth[i].y,hand[i].y,0.35);
 }
 }
 }
 
 function drawHand(p){
-ctx.lineWidth=2;
-ctx.strokeStyle="#ff66aa";
-ctx.shadowColor="#ff66aa";
-ctx.shadowBlur=10;
-
 ctx.beginPath();
 HAND_CONNECTIONS.forEach(([a,b])=>{
-ctx.moveTo(p[a].x*w,p[a].y*h);
-ctx.lineTo(p[b].x*w,p[b].y*h);
+let p1=p[a],p2=p[b];
+ctx.moveTo(w-p1.x*w,p1.y*h);
+ctx.lineTo(w-p2.x*w,p2.y*h);
 });
+ctx.strokeStyle=`hsl(${hue()},100%,60%)`;
+ctx.lineWidth=2;
+ctx.shadowColor=`hsl(${hue()},100%,60%)`;
+ctx.shadowBlur=10;
 ctx.stroke();
+}
 
+function drawPointsGlow(p){
 p.forEach((pt,i)=>{
+let x=w-pt.x*w;
+let y=pt.y*h;
+
 ctx.beginPath();
-ctx.arc(pt.x*w,pt.y*h,i==8?6:3,0,Math.PI*2);
-ctx.fillStyle=i==8?"#fff":"#ff66aa";
+ctx.arc(x,y,i===8?6:3,0,Math.PI*2);
+ctx.fillStyle=`hsl(${hue()},100%,70%)`;
+ctx.shadowColor=`hsl(${hue()},100%,70%)`;
+ctx.shadowBlur=15;
 ctx.fill();
 });
 }
 
-function detectShape(){
-if(trail.length<25) return;
+function drawLine(){
+if(drawPoints.length<2)return;
 
-let start=trail[0];
-let end=trail[trail.length-1];
-let d=Math.hypot(start.x-end.x,start.y-end.y);
+ctx.beginPath();
+drawPoints.forEach((p,i)=>{
+if(i===0) ctx.moveTo(p.x,p.y);
+else ctx.lineTo(p.x,p.y);
+});
 
-if(d<50){
-let type=Math.random();
-
-if(type<0.33) shapes.push({type:"heart",x:end.x,y:end.y,life:1});
-else if(type<0.66) shapes.push({type:"circle",x:end.x,y:end.y,life:1});
-else shapes.push({type:"star",x:end.x,y:end.y,life:1});
-
-trail=[];
-}
-}
-
-function drawShapes(){
-shapes.forEach((s,i)=>{
-ctx.save();
-ctx.translate(s.x,s.y);
-ctx.globalAlpha=s.life;
-
+ctx.strokeStyle=`hsl(${hue()},100%,60%)`;
+ctx.lineWidth=4;
+ctx.shadowColor=`hsl(${hue()},100%,60%)`;
 ctx.shadowBlur=20;
-ctx.shadowColor="#ff66aa";
-ctx.fillStyle="#ff66aa";
-
-if(s.type=="heart"){
-ctx.beginPath();
-ctx.moveTo(0,0);
-ctx.bezierCurveTo(-10,-15,-25,10,0,25);
-ctx.bezierCurveTo(25,10,10,-15,0,0);
-ctx.fill();
+ctx.stroke();
 }
 
-if(s.type=="circle"){
-ctx.beginPath();
-ctx.arc(0,0,15,0,Math.PI*2);
-ctx.fill();
-}
-
-if(s.type=="star"){
-ctx.beginPath();
-for(let i=0;i<5;i++){
-let a=i*2*Math.PI/5;
-ctx.lineTo(Math.cos(a)*15,Math.sin(a)*15);
-}
-ctx.closePath();
-ctx.fill();
-}
-
-ctx.restore();
-
-s.y-=0.4;
-s.life-=0.02;
-
-if(s.life<=0) shapes.splice(i,1);
-});
-}
-
-function pinchEffect(p){
+function pinch(p){
 let t=p[4],i=p[8];
 let dx=(t.x-i.x)*w;
 let dy=(t.y-i.y)*h;
-let dist=Math.hypot(dx,dy);
+let d=Math.hypot(dx,dy);
 
-let pin=dist<40;
+let pin=d<35;
 
 if(pin && !wasPinch){
-for(let k=0;k<20;k++){
+for(let k=0;k<30;k++){
 particles.push({
-x:i.x*w,y:i.y*h,
-vx:(Math.random()-0.5)*6,
-vy:(Math.random()-0.5)*6,
+x:w-i.x*w,
+y:i.y*h,
+vx:(Math.random()-0.5)*10,
+vy:(Math.random()-0.5)*10,
 life:1
 });
 }
@@ -233,46 +191,35 @@ p.life-=0.03;
 
 ctx.beginPath();
 ctx.arc(p.x,p.y,3,0,Math.PI*2);
-ctx.fillStyle="rgba(255,100,150,"+p.life+")";
+ctx.fillStyle=`hsl(${hue()},100%,60%)`;
+ctx.globalAlpha=p.life;
 ctx.fill();
 
 if(p.life<=0) particles.splice(i,1);
 });
-}
-
-function drawName(){
-let name=document.getElementById("nameInput").value;
-if(!name) return;
-
-ctx.font="40px sans-serif";
-ctx.textAlign="center";
-ctx.fillStyle="#ff66aa";
-ctx.shadowColor="#ff66aa";
-ctx.shadowBlur=20;
-
-ctx.fillText(name,w/2,h*0.85);
+ctx.globalAlpha=1;
 }
 
 function animate(){
-ctx.clearRect(0,0,w,h);
+ctx.fillStyle="rgba(0,0,0,0.15)";
+ctx.fillRect(0,0,w,h);
 
 if(hand){
 smoothHand();
-drawHand(smooth);
 
-let x=smooth[8].x*w;
+let x=w-smooth[8].x*w;
 let y=smooth[8].y*h;
 
-trail.push({x,y});
-if(trail.length>30) trail.shift();
+drawPoints.push({x,y});
+if(drawPoints.length>300) drawPoints.shift();
 
-detectShape();
-pinchEffect(smooth);
+drawHand(smooth);
+drawPointsGlow(smooth);
+drawLine();
+pinch(smooth);
 }
 
-drawShapes();
 drawParticles();
-drawName();
 
 requestAnimationFrame(animate);
 }
